@@ -4,5 +4,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: '/Claude-1/hebrew-presentation/',
   server: { host: true, port: 5173 },
 })
