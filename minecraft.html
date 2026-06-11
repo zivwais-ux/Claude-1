@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MineCraft HTML</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: monospace; }
+  canvas { display: block; cursor: none; image-rendering: pixelated; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+const BS = 32;          // block size in pixels
+const W  = 256;         // world width  (blocks)
+const H  = 64;          // world height (blocks)
+const GRAVITY  = 0.45;
+const JUMP_V   = -10.5;
+const WALK_SPD = 3.8;
+
+// ─── Block IDs ───────────────────────────────────────────────────────────────
+const B = {
+  AIR:0, GRASS:1, DIRT:2, STONE:3, BEDROCK:4,
+  SAND:5, GRAVEL:6, LOG:7, LEAVES:8, WATER:9,
+  COAL:10, IRON:11, GOLD:12, DIAMOND:13,
+  PLANK:14, GLASS:15, BRICK:16, SNOWGRASS:17, ICE:18
+};
+
+// ─── Block palette (each entry: [base, highlight, shadow, ore-dot]) ──────────
+const PAL = {
+  [B.GRASS]:    ['#5a9e3a','#6dbe4a','#3e7a26', null],
+  [B.DIRT]:     ['#7b5230','#9a6840','#5a3a20', null],
+  [B.STONE]:    ['#828282','#9a9a9a','#5e5e5e', null],
+  [B.BEDROCK]:  ['#2a2a2a','#3a3a3a','#181818', null],
+  [B.SAND]:     ['#d4be6a','#e8d47a','#b0a050', null],
+  [B.GRAVEL]:   ['#7a7268','#909088','#585050', null],
+  [B.LOG]:      ['#5c3d1e','#7a5530','#3e2810', null],
+  [B.LEAVES]:   ['#3a7a28','#4a9a36','#286018', null],
+  [B.WATER]:    ['#1e6eb4','#2e88d4','#145090', null],
+  [B.COAL]:     ['#828282','#9a9a9a','#5e5e5e','#1a1a1a'],
+  [B.IRON]:     ['#828282','#9a9a9a','#5e5e5e','#d4a46a'],
+  [B.GOLD]:     ['#828282','#9a9a9a','#5e5e5e','#ffd700'],
+  [B.DIAMOND]:  ['#828282','#9a9a9a','#5e5e5e','#00e5ff'],
+  [B.PLANK]:    ['#c8a060','#e0b878','#a07840', null],
+  [B.GLASS]:    ['#a8d8f0','#c8eaff','#7ab0cc', null],
+  [B.BRICK]:    ['#a04030','#c05040','#702820', null],
+  [B.SNOWGRASS]:['#e8e8f0','#ffffff','#c0c0d0', null],
+  [B.ICE]:      ['#90c8e8','#b8e0f8','#6090b8', null],
+};
+
+const BLOCK_NAMES = {
+  [B.DIRT]:'Dirt',[B.GRASS]:'Grass',[B.STONE]:'Stone',
+  [B.SAND]:'Sand',[B.GRAVEL]:'Gravel',[B.LOG]:'Log',
+  [B.LEAVES]:'Leaves',[B.WATER]:'Water',[B.COAL]:'Coal Ore',
+  [B.IRON]:'Iron Ore',[B.GOLD]:'Gold Ore',[B.DIAMOND]:'Diamond Ore',
+  [B.PLANK]:'Planks',[B.GLASS]:'Glass',[B.BRICK]:'Brick',
+  [B.SNOWGRASS]:'Snow Grass',[B.ICE]:'Ice',
+};
+
+// solid = blocks the player
+const SOLID = new Set([
+  B.GRASS,B.DIRT,B.STONE,B.BEDROCK,B.SAND,B.GRAVEL,
+  B.LOG,B.PLANK,B.GLASS,B.BRICK,B.SNOWGRASS,B.ICE,
+  B.COAL,B.IRON,B.GOLD,B.DIAMOND
+]);
+
+// ─── World storage ────────────────────────────────────────────────────────────
+const world = new Uint8Array(W * H);
+const idx = (x, y) => x * H + y;
+function getB(x, y) {
+  if (x < 0 || x >= W || y < 0 || y >= H) return B.BEDROCK;
+  return world[idx(x, y)];
+}
+function setB(x, y, v) {
+  if (x < 0 || x >= W || y < 0 || y >= H) return;
+  world[idx(x, y)] = v;
+}
+
+// ─── Noise helpers ────────────────────────────────────────────────────────────
+function hash(n) {
+  n = ((n >> 16) ^ n) * 0x45d9f3b;
+  n = ((n >> 16) ^ n) * 0x45d9f3b;
+  return ((n >> 16) ^ n) & 0x7fffffff;
+}
+function frac(n) { return n - Math.floor(n); }
+function lerp(a,b,t){ return a + t*(b-a); }
+function smoothstep(t){ return t*t*(3-2*t); }
+function valueNoise(x, seed=0) {
+  const xi = Math.floor(x);
+  const t  = smoothstep(frac(x));
+  const a  = hash(xi      + seed*7919) / 0x7fffffff;
+  const b2 = hash(xi + 1  + seed*7919) / 0x7fffffff;
+  return lerp(a, b2, t);
+}
+function octaveNoise(x, octs=4, seed=0) {
+  let v=0, amp=1, freq=1, max=0;
+  for(let i=0;i<octs;i++){
+    v   += valueNoise(x*freq, seed+i*13) * amp;
+    max += amp; amp*=0.5; freq*=2;
+  }
+  return v/max;
+}
+
+// ─── World generation ─────────────────────────────────────────────────────────
+const SEED = Math.random()*99999|0;
+const SEA = Math.floor(H * 0.52);
+
+function genWorld() {
+  // Terrain
+  const surf = new Int32Array(W);
+  for(let x=0;x<W;x++){
+    const n = octaveNoise(x/60, 5, SEED);
+    surf[x] = Math.round(H*0.38 + n*14);
+  }
+
+  // Biome noise
+  const biome = new Float32Array(W);
+  for(let x=0;x<W;x++) biome[x] = octaveNoise(x/80, 3, SEED+42);
+
+  for(let x=0;x<W;x++){
+    const s = surf[x];
+    const bio = biome[x]; // 0=snow, 0.3=forest, 0.7=desert
+
+    for(let y=0;y<H;y++){
+      if(y === H-1){
+        setB(x,y,B.BEDROCK); continue;
+      }
+      if(y > s+4){
+        // Deep stone with ores
+        const r = Math.random();
+        let blk = B.STONE;
+        if(r < 0.014)                  blk = B.COAL;
+        else if(r < 0.020 && y>s+10)   blk = B.IRON;
+        else if(r < 0.023 && y>s+18)   blk = B.GOLD;
+        else if(r < 0.026 && y>s+28)   blk = B.DIAMOND;
+        setB(x,y,blk);
+      } else if(y > s+1){
+        setB(x,y, bio<0.2 ? B.DIRT : bio>0.72 ? B.SAND : B.DIRT);
+      } else if(y === s+1){
+        setB(x,y, bio>0.72 ? B.SAND : B.DIRT);
+      } else if(y === s){
+        if(bio < 0.18)       setB(x,y,B.SNOWGRASS);
+        else if(bio > 0.72)  setB(x,y,B.SAND);
+        else                 setB(x,y,B.GRASS);
+      }
+    }
+
+    // Water fill
+    if(s > SEA){
+      for(let y=s+1;y<=SEA+1;y++){
+        if(getB(x,y)===B.AIR) setB(x,y,B.WATER);
+      }
+    }
+
+    // Trees
+    if(bio>=0.2 && bio<=0.68 && s<SEA+1 && x>3 && x<W-4 && Math.random()<0.055){
+      genTree(x, s-1);
+    }
+  }
+
+  // Caves
+  for(let c=0;c<120;c++){
+    let cx=Math.random()*W, cy=H*0.55+Math.random()*H*0.35;
+    const len=40+Math.random()*80;
+    for(let i=0;i<len;i++){
+      cx += (Math.random()-0.5)*3;
+      cy += (Math.random()-0.5)*2;
+      const r=2+Math.random()*2;
+      for(let dx=-r;dx<=r;dx++) for(let dy=-r;dy<=r;dy++){
+        if(dx*dx+dy*dy<=r*r){
+          const bx=Math.round(cx+dx), by=Math.round(cy+dy);
+          if(getB(bx,by)===B.STONE||getB(bx,by)===B.DIRT)
+            setB(bx,by,B.AIR);
+        }
+      }
+    }
+  }
+
+  // Gravel patches
+  for(let i=0;i<30;i++){
+    const px=Math.random()*W|0, py=Math.floor(H*0.6+Math.random()*H*0.3);
+    for(let dx=-2;dx<=2;dx++) for(let dy=-1;dy<=1;dy++)
+      if(getB(px+dx,py+dy)===B.STONE) setB(px+dx,py+dy,B.GRAVEL);
+  }
+}
+
+function genTree(x, baseY) {
+  const h = 4 + Math.random()*3|0;
+  for(let i=0;i<h;i++) setB(x, baseY-i, B.LOG);
+  const top = baseY - h;
+  for(let dx=-2;dx<=2;dx++) for(let dy=-1;dy<=2;dy++){
+    if(Math.abs(dx)+Math.abs(dy)<=3 && !(dx===0&&dy>0)){
+      const lx=x+dx, ly=top+dy;
+      if(lx>=0&&lx<W&&ly>=0&&ly<H && getB(lx,ly)===B.AIR)
+        setB(lx, ly, B.LEAVES);
+    }
+  }
+}
+
+// ─── Player ───────────────────────────────────────────────────────────────────
+const PW = 22, PH = 46;
+const player = {
+  x: 0, y: 0, vx: 0, vy: 0,
+  onGround: false,
+  slot: 0,
+  hotbar: [B.DIRT,B.GRASS,B.STONE,B.PLANK,B.GLASS,B.BRICK,B.SAND,B.LOG,B.LEAVES],
+  breakProg: 0,    // 0-1
+  breakX: -1, breakY: -1,
+  facing: 1,       // 1=right, -1=left
+  walkAnim: 0,
+};
+
+function spawnPlayer() {
+  const x = Math.floor(W/2);
+  for(let y=0;y<H;y++){
+    if(SOLID.has(getB(x,y))){
+      player.x = x*BS + (BS-PW)/2;
+      player.y = (y-2)*BS - PH + BS;
+      return;
+    }
+  }
+}
+
+// ─── Input ────────────────────────────────────────────────────────────────────
+const keys = {};
+let mx = 0, my = 0, lmb = false, rmb = false;
+
+window.addEventListener('keydown', e=>{ keys[e.code]=true; });
+window.addEventListener('keyup',   e=>{ keys[e.code]=false; });
+window.addEventListener('mousemove', e=>{ mx=e.clientX; my=e.clientY; });
+window.addEventListener('mousedown', e=>{
+  if(e.button===0) lmb=true;
+  if(e.button===2) rmb=true;
+});
+window.addEventListener('mouseup', e=>{
+  if(e.button===0) lmb=false;
+  if(e.button===2){ rmb=false; }
+});
+window.addEventListener('contextmenu', e=>e.preventDefault());
+window.addEventListener('wheel', e=>{
+  player.slot = (player.slot + (e.deltaY>0?1:-1) + 9) % 9;
+  e.preventDefault();
+},{passive:false});
+window.addEventListener('keydown', e=>{
+  if(e.key>='1'&&e.key<='9') player.slot = +e.key-1;
+});
+
+// ─── Camera ───────────────────────────────────────────────────────────────────
+let camX = 0, camY = 0;
+
+// ─── Physics ──────────────────────────────────────────────────────────────────
+function isSolid(bx, by) {
+  return SOLID.has(getB(bx, by));
+}
+
+function updatePlayer(dt) {
+  const left  = keys['ArrowLeft']  || keys['KeyA'];
+  const right = keys['ArrowRight'] || keys['KeyD'];
+  const jump  = keys['ArrowUp']    || keys['KeyW'] || keys['Space'];
+
+  if(left)  { player.vx = -WALK_SPD; player.facing = -1; }
+  if(right) { player.vx =  WALK_SPD; player.facing =  1; }
+  if(!left && !right) player.vx *= 0.72;
+
+  if(jump && player.onGround){ player.vy = JUMP_V; player.onGround=false; }
+
+  player.vy = Math.min(player.vy + GRAVITY, 18);
+
+  // X movement
+  player.x += player.vx;
+  {
+    const bx1 = Math.floor(player.x/BS);
+    const bx2 = Math.floor((player.x+PW-1)/BS);
+    const by1 = Math.floor(player.y/BS);
+    const by2 = Math.floor((player.y+PH-1)/BS);
+    for(let by=by1;by<=by2;by++){
+      if(player.vx>0 && isSolid(bx2,by)){ player.x=bx2*BS-PW; player.vx=0; break; }
+      if(player.vx<0 && isSolid(bx1,by)){ player.x=(bx1+1)*BS;  player.vx=0; break; }
+    }
+  }
+
+  // Y movement
+  player.y += player.vy;
+  player.onGround = false;
+  {
+    const bx1 = Math.floor(player.x/BS);
+    const bx2 = Math.floor((player.x+PW-1)/BS);
+    const by1 = Math.floor(player.y/BS);
+    const by2 = Math.floor((player.y+PH-1)/BS);
+    for(let bx=bx1;bx<=bx2;bx++){
+      if(player.vy>0 && isSolid(bx,by2)){ player.y=by2*BS-PH; player.vy=0; player.onGround=true; break; }
+      if(player.vy<0 && isSolid(bx,by1)){ player.y=(by1+1)*BS; player.vy=0; break; }
+    }
+  }
+
+  // World bounds
+  player.x = Math.max(0, Math.min(W*BS-PW, player.x));
+  if(player.y > H*BS+100) spawnPlayer();
+
+  // Walk animation
+  if(Math.abs(player.vx)>0.5 && player.onGround) player.walkAnim+=0.25;
+
+  // ── Block break ──
+  const wbx = Math.floor((mx+camX)/BS);
+  const wby = Math.floor((my+camY)/BS);
+  const reach = 6;
+  const inRange =
+    Math.abs(wbx - (player.x/BS)) < reach &&
+    Math.abs(wby - (player.y/BS)) < reach;
+
+  if(lmb && inRange && getB(wbx,wby)!==B.AIR && getB(wbx,wby)!==B.BEDROCK){
+    if(player.breakX===wbx && player.breakY===wby){
+      player.breakProg += 0.025;
+      if(player.breakProg>=1){
+        setB(wbx,wby,B.AIR);
+        player.breakProg=0; player.breakX=-1; player.breakY=-1;
+      }
+    } else {
+      player.breakX=wbx; player.breakY=wby; player.breakProg=0;
+    }
+  } else {
+    if(!lmb){ player.breakProg=0; player.breakX=-1; player.breakY=-1; }
+  }
+}
+
+// Right-click place – handled on mousedown so it fires once
+let lastRmb = false;
+function handlePlace() {
+  if(rmb && !lastRmb){
+    const wbx = Math.floor((mx+camX)/BS);
+    const wby = Math.floor((my+camY)/BS);
+    const reach = 6;
+    const inRange =
+      Math.abs(wbx-(player.x/BS)) < reach &&
+      Math.abs(wby-(player.y/BS)) < reach;
+    if(inRange && getB(wbx,wby)===B.AIR){
+      // Don't place inside player
+      const pbx1=Math.floor(player.x/BS), pbx2=Math.floor((player.x+PW-1)/BS);
+      const pby1=Math.floor(player.y/BS), pby2=Math.floor((player.y+PH-1)/BS);
+      if(!(wbx>=pbx1&&wbx<=pbx2&&wby>=pby1&&wby<=pby2))
+        setB(wbx,wby, player.hotbar[player.slot]);
+    }
+  }
+  lastRmb = rmb;
+}
+
+// ─── Rendering ────────────────────────────────────────────────────────────────
+
+// Pre-render block textures onto offscreen canvases
+const blockCache = {};
+function getBlockCanvas(id) {
+  if(blockCache[id]) return blockCache[id];
+  const p = PAL[id]; if(!p) return null;
+  const oc = document.createElement('canvas');
+  oc.width = oc.height = BS;
+  const c = oc.getContext('2d');
+  // Base
+  c.fillStyle = p[0]; c.fillRect(0,0,BS,BS);
+  // Top highlight strip
+  c.fillStyle = p[1]; c.fillRect(0,0,BS,BS*0.18);
+  // Left highlight
+  c.fillStyle = p[1]; c.globalAlpha=0.4;
+  c.fillRect(0,0,BS*0.18,BS); c.globalAlpha=1;
+  // Bottom shadow strip
+  c.fillStyle = p[2]; c.fillRect(0,BS*0.82,BS,BS*0.18);
+  // Right shadow
+  c.fillStyle = p[2]; c.globalAlpha=0.4;
+  c.fillRect(BS*0.82,0,BS*0.18,BS); c.globalAlpha=1;
+  // Pixel detail noise
+  c.fillStyle = p[2];
+  for(let i=0;i<12;i++){
+    const px2=(hash(id*31+i*7)%24+4), py2=(hash(id*17+i*13+3)%24+4);
+    c.fillRect(px2,py2,2,2);
+  }
+  c.fillStyle = p[1];
+  for(let i=0;i<8;i++){
+    const px2=(hash(id*53+i*11+1)%22+5), py2=(hash(id*41+i*9+2)%22+5);
+    c.fillRect(px2,py2,2,2);
+  }
+  // Ore dot pattern
+  if(p[3]){
+    c.fillStyle = p[3];
+    const pts=[[8,8],[20,12],[12,20],[22,22],[6,18]];
+    pts.forEach(([px2,py2])=>c.fillRect(px2,py2,4,4));
+  }
+  // Grass special top
+  if(id===B.GRASS){
+    c.fillStyle='#4caf50'; c.fillRect(0,0,BS,7);
+    c.fillStyle='#81c784'; c.fillRect(2,1,BS-4,3);
+  }
+  if(id===B.SNOWGRASS){
+    c.fillStyle='#e8e8f0'; c.fillRect(0,0,BS,7);
+    c.fillStyle='#ffffff'; c.fillRect(2,1,BS-4,3);
+  }
+  // LOG ring pattern
+  if(id===B.LOG){
+    c.strokeStyle='#3e2810'; c.lineWidth=1.5;
+    c.beginPath(); c.arc(BS/2,BS/2,BS*0.3,0,Math.PI*2); c.stroke();
+    c.beginPath(); c.arc(BS/2,BS/2,BS*0.15,0,Math.PI*2); c.stroke();
+  }
+  // Brick mortar lines
+  if(id===B.BRICK){
+    c.strokeStyle='#c8a898'; c.lineWidth=1;
+    c.beginPath();
+    c.moveTo(0,BS/2); c.lineTo(BS,BS/2);
+    c.moveTo(BS/4,0); c.lineTo(BS/4,BS/2);
+    c.moveTo(BS*3/4,BS/2); c.lineTo(BS*3/4,BS);
+    c.stroke();
+  }
+  // Water wave
+  if(id===B.WATER){
+    c.fillStyle='rgba(255,255,255,0.25)';
+    for(let wx=0;wx<BS;wx+=8){
+      c.fillRect(wx,BS*0.3,4,2);
+      c.fillRect(wx+4,BS*0.5,4,2);
+    }
+    c.globalAlpha=0.6;
+    c.fillStyle='#1e6eb4'; c.fillRect(0,0,BS,BS);
+    c.globalAlpha=1;
+  }
+  // Leaves dapple
+  if(id===B.LEAVES){
+    c.globalAlpha=0.55;
+    c.fillStyle='#2a6020'; c.fillRect(0,0,BS,BS);
+    c.fillStyle='#5aaa40';
+    for(let i=0;i<6;i++){
+      const lx=(hash(i*7+1)%20+3), ly=(hash(i*13+2)%20+3);
+      c.fillRect(lx,ly,5,4);
+    }
+    c.globalAlpha=1;
+  }
+  // Glass pane
+  if(id===B.GLASS){
+    c.clearRect(0,0,BS,BS);
+    c.fillStyle='rgba(168,216,240,0.35)'; c.fillRect(0,0,BS,BS);
+    c.strokeStyle='rgba(200,234,255,0.7)'; c.lineWidth=2;
+    c.strokeRect(1,1,BS-2,BS-2);
+    c.fillStyle='rgba(255,255,255,0.3)'; c.fillRect(2,2,8,8);
+  }
+  blockCache[id] = oc;
+  return oc;
+}
+
+// ─── Draw functions ───────────────────────────────────────────────────────────
+let time = 0; // game ticks
+
+function drawSky() {
+  // Day/night based on time
+  const dayFrac = (Math.sin(time/3600)*0.5+0.5); // 0=night, 1=day
+  const r = lerp(10, 100, dayFrac)|0;
+  const g = lerp(10, 160, dayFrac)|0;
+  const b2 = lerp(30, 220, dayFrac)|0;
+  ctx.fillStyle = `rgb(${r},${g},${b2})`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Sun
+  const sunAngle = time/3600 * Math.PI;
+  const sunX = canvas.width*0.5 + Math.cos(sunAngle)*canvas.width*0.4;
+  const sunY = canvas.height*0.5 - Math.sin(sunAngle)*canvas.height*0.7;
+  if(dayFrac>0.1){
+    ctx.fillStyle='#FFE566';
+    ctx.beginPath(); ctx.arc(sunX,sunY,24,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,230,80,0.3)';
+    ctx.beginPath(); ctx.arc(sunX,sunY,36,0,Math.PI*2); ctx.fill();
+  }
+
+  // Moon
+  const moonX = canvas.width*0.5 + Math.cos(sunAngle+Math.PI)*canvas.width*0.4;
+  const moonY = canvas.height*0.5 - Math.sin(sunAngle+Math.PI)*canvas.height*0.7;
+  if(dayFrac<0.5){
+    ctx.fillStyle='#e8e8d0';
+    ctx.beginPath(); ctx.arc(moonX,moonY,16,0,Math.PI*2); ctx.fill();
+  }
+
+  // Stars (night only)
+  if(dayFrac<0.25){
+    ctx.fillStyle=`rgba(255,255,255,${(0.25-dayFrac)*4})`;
+    for(let i=0;i<60;i++){
+      const sx=(hash(i*17)%canvas.width), sy=(hash(i*31)%(canvas.height*0.6));
+      ctx.fillRect(sx,sy,2,2);
+    }
+  }
+}
+
+function drawWorld() {
+  const sx = Math.max(0, Math.floor(camX/BS)-1);
+  const ex = Math.min(W-1, Math.ceil((camX+canvas.width)/BS)+1);
+  const sy = Math.max(0, Math.floor(camY/BS)-1);
+  const ey = Math.min(H-1, Math.ceil((camY+canvas.height)/BS)+1);
+
+  for(let x=sx;x<=ex;x++){
+    for(let y=sy;y<=ey;y++){
+      const id = getB(x,y);
+      if(id===B.AIR) continue;
+      const bc = getBlockCanvas(id);
+      if(!bc) continue;
+      const px = x*BS - camX, py = y*BS - camY;
+      ctx.drawImage(bc, px, py);
+
+      // Breaking overlay
+      if(player.breakX===x && player.breakY===y && player.breakProg>0){
+        ctx.fillStyle=`rgba(0,0,0,${player.breakProg*0.6})`;
+        ctx.fillRect(px,py,BS,BS);
+        // Crack lines
+        ctx.strokeStyle=`rgba(0,0,0,${player.breakProg})`;
+        ctx.lineWidth=1;
+        const cx2=px+BS/2, cy2=py+BS/2;
+        for(let a=0;a<player.breakProg*6;a++){
+          const ang=(a/6)*Math.PI*2;
+          ctx.beginPath();
+          ctx.moveTo(cx2,cy2);
+          ctx.lineTo(cx2+Math.cos(ang)*BS*0.6, cy2+Math.sin(ang)*BS*0.6);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+}
+
+function drawPlayer() {
+  const px = player.x - camX;
+  const py = player.y - camY;
+  const f  = player.facing;
+  const wa = player.walkAnim;
+
+  ctx.save();
+  ctx.translate(px + PW/2, py);
+  if(f===-1) ctx.scale(-1,1);
+
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.25)';
+  ctx.beginPath(); ctx.ellipse(0,PH+2,PW*0.6,4,0,0,Math.PI*2); ctx.fill();
+
+  const legSwing = Math.sin(wa)*8;
+
+  // Left leg
+  ctx.fillStyle='#3949ab';
+  ctx.fillRect(-9+Math.sin(wa)*4, 27, 8, 19);
+  // Right leg
+  ctx.fillStyle='#3949ab';
+  ctx.fillRect(1+Math.sin(wa+Math.PI)*4, 27, 8, 19);
+
+  // Body
+  ctx.fillStyle='#1565c0';
+  ctx.fillRect(-9,16,18,13);
+  // Body shading
+  ctx.fillStyle='rgba(0,0,0,0.15)';
+  ctx.fillRect(4,16,5,13);
+  // Belt
+  ctx.fillStyle='#7b4f1a';
+  ctx.fillRect(-9,27,18,3);
+
+  // Left arm (swings opposite to right leg)
+  ctx.fillStyle='#d4896a';
+  ctx.save();
+  ctx.translate(-11,17);
+  ctx.rotate(-Math.sin(wa)*0.4);
+  ctx.fillRect(-4,0,5,14);
+  ctx.restore();
+
+  // Right arm (with tool)
+  ctx.fillStyle='#d4896a';
+  ctx.save();
+  ctx.translate(11,17);
+  ctx.rotate(Math.sin(wa)*0.4);
+  ctx.fillRect(-1,0,5,14);
+  // Held block mini preview
+  const heldId = player.hotbar[player.slot];
+  const hbc = getBlockCanvas(heldId);
+  if(hbc){
+    ctx.drawImage(hbc, 2, 10, 14, 14);
+  }
+  ctx.restore();
+
+  // Head
+  ctx.fillStyle='#e8a882';
+  ctx.fillRect(-8,-1,16,16);
+  // Hair
+  ctx.fillStyle='#5c3a1a';
+  ctx.fillRect(-8,-1,16,4);
+  ctx.fillRect(-8,-1,3,16);
+  // Eyes
+  ctx.fillStyle='#1a1a1a';
+  ctx.fillRect(2,4,3,3);
+  // Eye white
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.fillRect(2,4,1,1);
+  // Mouth
+  ctx.fillStyle='#c47055';
+  ctx.fillRect(1,10,5,2);
+
+  ctx.restore();
+}
+
+function drawCursor() {
+  const wbx = Math.floor((mx+camX)/BS);
+  const wby = Math.floor((my+camY)/BS);
+  const px  = wbx*BS - camX;
+  const py  = wby*BS - camY;
+  const reach = 6;
+  const inRange =
+    Math.abs(wbx-(player.x/BS))<reach &&
+    Math.abs(wby-(player.y/BS))<reach;
+
+  if(inRange){
+    ctx.strokeStyle='rgba(255,255,255,0.8)';
+    ctx.lineWidth=2;
+    ctx.strokeRect(px+1,py+1,BS-2,BS-2);
+    ctx.strokeStyle='rgba(0,0,0,0.4)';
+    ctx.lineWidth=1;
+    ctx.strokeRect(px,py,BS,BS);
+  }
+
+  // Crosshair
+  ctx.strokeStyle='rgba(255,255,255,0.9)';
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(mx-10,my); ctx.lineTo(mx+10,my);
+  ctx.moveTo(mx,my-10); ctx.lineTo(mx,my+10);
+  ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,0.4)';
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(mx-10,my); ctx.lineTo(mx+10,my);
+  ctx.moveTo(mx,my-10); ctx.lineTo(mx,my+10);
+  ctx.stroke();
+}
+
+function drawHotbar() {
+  const SLOT = 52, GAP = 4;
+  const total = 9*(SLOT+GAP)-GAP;
+  const hx = (canvas.width-total)/2;
+  const hy = canvas.height - SLOT - 16;
+
+  // Background panel
+  ctx.fillStyle='rgba(0,0,0,0.55)';
+  ctx.beginPath();
+  roundRect(ctx, hx-8, hy-6, total+16, SLOT+12, 6);
+  ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.15)';
+  ctx.lineWidth=1;
+  ctx.stroke();
+
+  for(let i=0;i<9;i++){
+    const sx = hx + i*(SLOT+GAP);
+    const sy = hy;
+    const sel = i===player.slot;
+
+    // Slot bg
+    ctx.fillStyle = sel ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)';
+    ctx.beginPath(); roundRect(ctx,sx,sy,SLOT,SLOT,4); ctx.fill();
+
+    ctx.strokeStyle = sel ? '#FFD700' : 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = sel ? 2.5 : 1;
+    ctx.beginPath(); roundRect(ctx,sx,sy,SLOT,SLOT,4); ctx.stroke();
+
+    const id = player.hotbar[i];
+    const bc = getBlockCanvas(id);
+    if(bc){
+      const pad = 7;
+      ctx.drawImage(bc, sx+pad, sy+pad, SLOT-pad*2, SLOT-pad*2);
+    }
+
+    // Slot number
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.font='bold 11px monospace';
+    ctx.fillText(i+1, sx+4, sy+13);
+  }
+
+  // Selected block name
+  const name = BLOCK_NAMES[player.hotbar[player.slot]] || '';
+  if(name){
+    ctx.font='bold 15px monospace';
+    const tw = ctx.measureText(name).width;
+    ctx.fillStyle='rgba(0,0,0,0.5)';
+    ctx.beginPath(); roundRect(ctx, canvas.width/2-tw/2-10, hy-36, tw+20, 26, 5); ctx.fill();
+    ctx.fillStyle='#FFD700';
+    ctx.textAlign='center';
+    ctx.fillText(name, canvas.width/2, hy-18);
+    ctx.textAlign='left';
+  }
+}
+
+function drawHUD() {
+  // Coordinates + controls
+  ctx.fillStyle='rgba(0,0,0,0.45)';
+  ctx.beginPath(); roundRect(ctx,10,10,220,82,6); ctx.fill();
+  ctx.fillStyle='#e0e0e0';
+  ctx.font='13px monospace';
+  const bx = Math.floor(player.x/BS), by2 = Math.floor(player.y/BS);
+  ctx.fillText(`X:${bx}  Y:${by2}`, 18, 30);
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.font='11px monospace';
+  ctx.fillText('WASD / Arrows  ─  Move & Jump', 18, 50);
+  ctx.fillText('Left click  ─  Break block', 18, 65);
+  ctx.fillText('Right click ─  Place block', 18, 80);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+// ─── Camera smooth follow ─────────────────────────────────────────────────────
+function updateCamera() {
+  const tx = player.x + PW/2 - canvas.width/2;
+  const ty = player.y + PH/2 - canvas.height/2;
+  camX += (tx-camX)*0.12;
+  camY += (ty-camY)*0.12;
+  camX = Math.max(0, Math.min(W*BS - canvas.width,  camX));
+  camY = Math.max(0, Math.min(H*BS - canvas.height, camY));
+}
+
+// ─── Main loop ────────────────────────────────────────────────────────────────
+let last = 0;
+function loop(ts) {
+  const dt = Math.min((ts-last)/16.67, 3);
+  last = ts;
+  time++;
+
+  updatePlayer(dt);
+  handlePlace();
+  updateCamera();
+
+  drawSky();
+  drawWorld();
+  drawPlayer();
+  drawCursor();
+  drawHotbar();
+  drawHUD();
+
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('resize', ()=>{
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+genWorld();
+spawnPlayer();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
