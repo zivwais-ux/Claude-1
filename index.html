@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notivo — Smart Notification Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #06071a;
+  --bg2:       #0a0c22;
+  --bg3:       #0e1028;
+  --bg4:       #141640;
+  --hover:     rgba(124,92,252,.07);
+  --active:    rgba(124,92,252,.13);
+  --accent:    #7C5CFC;
+  --accentLo:  rgba(124,92,252,.22);
+  --accentHi:  #9B7FFF;
+  --coral:     #E8745C;
+  --green:     #3ECDA4;
+  --yellow:    #F5B731;
+  --red:       #F06575;
+  --t1:        #E9E9F5;
+  --t2:        #7E7EA8;
+  --t3:        #4A4A6A;
+  --border:    rgba(255,255,255,.06);
+  --border2:   rgba(255,255,255,.10);
+  --r:         12px;
+  --rLg:       18px;
+  --rSm:       8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--t1);
+  font-size:13.5px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 15% 60%,rgba(124,92,252,.04) 0%,transparent 100%),
+    radial-gradient(ellipse 40% 40% at 85% 15%,rgba(62,205,164,.025) 0%,transparent 100%);
+}
+
+/* ─ Layout ───────────────────────────────────── */
+.app{display:flex;height:100vh}
+
+/* ─ Sidebar ──────────────────────────────────── */
+.sidebar{
+  width:248px;flex-shrink:0;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.sidebar-logo{
+  padding:20px 18px 16px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);
+}
+.logo-mark{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,var(--accent) 0%,#4A3BCC 100%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 18px var(--accentLo);flex-shrink:0;
+}
+.logo-mark svg{width:16px;height:16px}
+.logo-word{font-size:16px;font-weight:800;letter-spacing:-.4px}
+.logo-word em{font-style:normal;color:var(--accent)}
+
+.sidebar-scroll{flex:1;overflow-y:auto;padding:12px 10px;scrollbar-width:none}
+.sidebar-scroll::-webkit-scrollbar{display:none}
+
+.nav-label-section{
+  font-size:10px;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--t3);
+  padding:10px 10px 4px;margin-top:4px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:9px;
+  padding:8px 10px;border-radius:var(--rSm);
+  color:var(--t2);cursor:pointer;
+  transition:background .12s,color .12s;
+  user-select:none;position:relative;
+}
+.nav-item:hover{background:var(--hover);color:var(--t1)}
+.nav-item.active{background:var(--active);color:var(--accent)}
+.nav-item.active .nav-ico{color:var(--accent)}
+.nav-ico{width:15px;height:15px;flex-shrink:0}
+.nav-text{font-size:13.5px;font-weight:500;flex:1}
+.nav-badge{
+  background:var(--accent);color:#fff;
+  font-size:10.5px;font-weight:700;
+  padding:1px 6px;border-radius:20px;min-width:19px;text-align:center;
+}
+.nav-badge.dim{background:var(--bg4);color:var(--t2)}
+.ch-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+.sidebar-foot{
+  padding:12px 14px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.ava{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent) 0%,#3B2BB0 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11.5px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.foot-info{flex:1;min-width:0}
+.foot-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foot-plan{font-size:11px;color:var(--t3)}
+.ico-btn{
+  width:28px;height:28px;border:none;background:transparent;
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--t2);transition:all .12s;
+}
+.ico-btn:hover{background:var(--hover);color:var(--t1)}
+
+/* ─ Main ─────────────────────────────────────── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* ─ Topbar ───────────────────────────────────── */
+.topbar{
+  height:56px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 22px;gap:12px;
+  flex-shrink:0;background:var(--bg);
+}
+.topbar-title{font-size:15.5px;font-weight:700;letter-spacing:-.3px}
+.topbar-spacer{flex:1}
+.search-wrap{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--rSm);padding:0 11px;
+  height:33px;width:210px;transition:all .15s;
+}
+.search-wrap:focus-within{
+  border-color:var(--accent);background:var(--bg3);
+  box-shadow:0 0 0 3px var(--accentLo);
+}
+.search-wrap svg{width:13px;height:13px;color:var(--t3);flex-shrink:0}
+.search-inp{
+  background:transparent;border:none;outline:none;
+  color:var(--t1);font-size:13px;font-family:inherit;width:100%;
+}
+.search-inp::placeholder{color:var(--t3)}
+.kbd{
+  font-size:9.5px;color:var(--t3);background:var(--bg3);
+  border:1px solid var(--border2);border-radius:4px;
+  padding:1px 5px;font-family:inherit;white-space:nowrap;
+}
+.bell-wrap{position:relative}
+.bell-dot{
+  position:absolute;top:4px;right:4px;
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent);border:2px solid var(--bg);
+}
+
+/* ─ Content ──────────────────────────────────── */
+.content{flex:1;overflow:hidden;display:flex}
+.view{display:none;flex:1;overflow:hidden;flex-direction:column}
+.view.active{display:flex}
+
+/* ─ Inbox layout ─────────────────────────────── */
+.inbox-wrap{display:flex;flex:1;overflow:hidden}
+.list-col{
+  width:440px;flex-shrink:0;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.detail-col{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+
+/* ─ Filter bar ───────────────────────────────── */
+.filter-bar{
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+  background:var(--bg);
+}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 11px;border-radius:20px;font-size:12px;font-weight:500;
+  cursor:pointer;border:1px solid var(--border2);color:var(--t2);
+  background:transparent;transition:all .12s;user-select:none;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent);background:var(--active)}
+.chip.on{border-color:var(--accent);background:var(--active);color:var(--accent)}
+.chip-dot{width:5px;height:5px;border-radius:50%}
+.f-space{flex:1}
+.sort-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:var(--rSm);
+  font-size:12px;font-weight:500;cursor:pointer;
+  border:1px solid var(--border);color:var(--t2);
+  background:transparent;font-family:inherit;transition:all .12s;
+}
+.sort-btn:hover{color:var(--t1);border-color:var(--border2)}
+
+/* ─ Notification list ────────────────────────── */
+.n-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--bg4) transparent}
+.n-list::-webkit-scrollbar{width:3px}
+.n-list::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px}
+
+.n-group{
+  padding:10px 14px 3px;font-size:10px;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--t3);
+}
+.n-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px 14px;cursor:pointer;
+  border-bottom:1px solid var(--border);
+  transition:background .1s;position:relative;
+  animation:fadeUp .22s ease both;
+}
+.n-item:hover{background:var(--hover)}
+.n-item.sel{background:var(--active)}
+.n-item.unread::before{
+  content:'';position:absolute;left:4px;top:50%;transform:translateY(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--accent);
+}
+.n-src-ico{
+  width:32px;height:32px;border-radius:var(--rSm);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+}
+.n-src-ico svg{width:16px;height:16px}
+.n-body{flex:1;min-width:0}
+.n-top{display:flex;align-items:baseline;gap:6px;margin-bottom:2px}
+.n-src-name{font-size:11px;font-weight:700;flex-shrink:0}
+.n-time{font-size:10.5px;color:var(--t3);margin-left:auto;flex-shrink:0}
+.n-title{
+  font-size:13px;font-weight:500;color:var(--t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.n-item.unread .n-title{font-weight:650}
+.n-preview{
+  font-size:11.5px;color:var(--t2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;
+}
+.n-acts{display:flex;gap:3px;opacity:0;transition:opacity .12s;flex-shrink:0;margin-top:3px}
+.n-item:hover .n-acts{opacity:1}
+.act-btn{
+  width:24px;height:24px;border:none;background:var(--bg3);
+  border-radius:5px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--t2);transition:all .12s;
+}
+.act-btn:hover{background:var(--accent);color:#fff}
+.act-btn svg{width:12px;height:12px}
+
+/* ─ Detail panel ─────────────────────────────── */
+.detail-panel{
+  flex:1;padding:32px 36px;
+  display:flex;align-items:center;justify-content:center;
+}
+.detail-panel.loaded{align-items:flex-start;justify-content:flex-start}
+.empty-st{text-align:center;max-width:260px}
+.empty-ill{
+  width:72px;height:72px;margin:0 auto 18px;
+  background:var(--bg2);border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);
+}
+.empty-ill svg{width:32px;height:32px;color:var(--t3)}
+.empty-h{font-size:15px;font-weight:700;margin-bottom:7px;letter-spacing:-.3px}
+.empty-p{font-size:12.5px;color:var(--t2);line-height:1.6}
+
+.d-content{width:100%;animation:fadeUp .2s ease}
+.d-head{display:flex;align-items:center;gap:13px;margin-bottom:24px}
+.d-src-ico{
+  width:42px;height:42px;border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.d-src-ico svg{width:20px;height:20px}
+.d-meta{flex:1}
+.d-ch{font-size:11.5px;font-weight:700;margin-bottom:2px}
+.d-ts{font-size:11.5px;color:var(--t2)}
+.d-title{font-size:20px;font-weight:800;letter-spacing:-.5px;line-height:1.3;margin-bottom:14px}
+.d-tags{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.tag{
+  padding:3px 9px;border-radius:20px;
+  font-size:11px;font-weight:600;border:1px solid;
+}
+.d-body{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px 20px;margin-bottom:20px;
+  font-size:13px;line-height:1.75;color:var(--t2);
+}
+.d-body p+p{margin-top:10px}
+.d-acts{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ─ Buttons ──────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 15px;border-radius:var(--rSm);
+  font-size:13px;font-weight:600;cursor:pointer;
+  border:none;font-family:inherit;transition:all .15s;
+}
+.btn svg{width:14px;height:14px}
+.btn-primary{
+  background:var(--accent);color:#fff;
+  box-shadow:0 0 16px var(--accentLo);
+}
+.btn-primary:hover{background:var(--accentHi);transform:translateY(-1px);box-shadow:0 4px 20px var(--accentLo)}
+.btn-secondary{background:var(--bg2);color:var(--t1);border:1px solid var(--border2)}
+.btn-secondary:hover{background:var(--bg3)}
+.btn-ghost{background:transparent;color:var(--t2)}
+.btn-ghost:hover{background:var(--bg2);color:var(--t1)}
+
+/* ─ Analytics view ───────────────────────────── */
+.analytics-wrap{padding:28px 30px;overflow-y:auto;flex:1}
+.view-head{margin-bottom:22px}
+.view-h1{font-size:21px;font-weight:800;letter-spacing:-.4px}
+.view-sub{font-size:13px;color:var(--t2);margin-top:3px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--rLg);padding:18px 20px;position:relative;overflow:hidden;
+}
+.stat-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;
+  height:2px;border-radius:var(--rLg) var(--rLg) 0 0;
+}
+.sc-purple::after{background:var(--accent)}
+.sc-green::after{background:var(--green)}
+.sc-coral::after{background:var(--coral)}
+.sc-yellow::after{background:var(--yellow)}
+.stat-lbl{font-size:11.5px;font-weight:500;color:var(--t2);margin-bottom:9px}
+.stat-val{font-size:30px;font-weight:800;letter-spacing:-1px;margin-bottom:5px}
+.stat-chg{font-size:11px;color:var(--t2)}
+.stat-chg.up{color:var(--green)}
+.stat-chg.dn{color:var(--red)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.chart-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--rLg);padding:20px 22px;
+}
+.card-h{font-size:13.5px;font-weight:700;margin-bottom:2px}
+.card-sub{font-size:11.5px;color:var(--t2);margin-bottom:16px}
+.bar-chart{display:flex;align-items:flex-end;gap:5px;height:80px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%}
+.bar-inner{flex:1;display:flex;align-items:flex-end;width:100%}
+.bar{width:100%;border-radius:3px 3px 0 0;transition:height .3s}
+.bar-lbl{font-size:9.5px;color:var(--t3)}
+.ch-list{display:flex;flex-direction:column;gap:11px}
+.ch-row{display:flex;align-items:center;gap:11px}
+.ch-ico{
+  width:26px;height:26px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ch-ico svg{width:13px;height:13px}
+.ch-name{font-size:13px;font-weight:500;flex:1}
+.ch-prog{width:80px;height:3px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.ch-bar{height:100%;border-radius:3px}
+.ch-num{font-size:11.5px;color:var(--t2);width:28px;text-align:right}
+
+/* ─ Rules view ───────────────────────────────── */
+.rules-wrap{padding:28px 30px;overflow-y:auto;flex:1}
+.rules-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
+.rule-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--rLg);padding:16px 18px;margin-bottom:9px;
+  display:flex;align-items:center;gap:13px;transition:border-color .12s;
+}
+.rule-card:hover{border-color:var(--border2)}
+.rule-ico{
+  width:36px;height:36px;border-radius:var(--rSm);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.rule-ico svg{width:17px;height:17px}
+.rule-info{flex:1}
+.rule-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.rule-desc{font-size:11.5px;color:var(--t2)}
+.toggle{
+  width:34px;height:19px;background:var(--bg4);
+  border-radius:20px;cursor:pointer;transition:background .2s;
+  position:relative;flex-shrink:0;
+}
+.toggle::after{
+  content:'';position:absolute;width:13px;height:13px;
+  background:#fff;border-radius:50%;top:3px;left:3px;
+  transition:transform .2s;
+}
+.toggle.on{background:var(--accent)}
+.toggle.on::after{transform:translateX(15px)}
+
+/* ─ Animations ───────────────────────────────── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.view.active>*{animation:fadeUp .22s ease both}
+
+/* ─ Scrollbar ────────────────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#2a2a55}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ Sidebar ═══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    </div>
+    <span class="logo-word">Noti<em>vo</em></span>
+  </div>
+
+  <div class="sidebar-scroll">
+    <div class="nav-item active" onclick="nav('inbox',this)">
+      <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+      <span class="nav-text">Inbox</span>
+      <span class="nav-badge" id="badge-inbox">12</span>
+    </div>
+    <div class="nav-item" onclick="nav('inbox',this);setFilter('starred',document.querySelector('.chip[data-f=starred]'))">
+      <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span class="nav-text">Starred</span>
+      <span class="nav-badge dim">3</span>
+    </div>
+    <div class="nav-item" onclick="nav('inbox',this);setFilter('snoozed',document.querySelector('.chip[data-f=snoozed]'))">
+      <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="nav-text">Snoozed</span>
+      <span class="nav-badge dim">2</span>
+    </div>
+
+    <div class="nav-label-section">Channels</div>
+    <div class="nav-item" onclick="filterCh('github')"><div class="ch-dot" style="background:#58a759"></div><span class="nav-text">GitHub</span><span class="nav-badge dim">4</span></div>
+    <div class="nav-item" onclick="filterCh('slack')"><div class="ch-dot" style="background:#e01e5a"></div><span class="nav-text">Slack</span><span class="nav-badge dim">3</span></div>
+    <div class="nav-item" onclick="filterCh('calendar')"><div class="ch-dot" style="background:#4285f4"></div><span class="nav-text">Calendar</span><span class="nav-badge dim">2</span></div>
+    <div class="nav-item" onclick="filterCh('email')"><div class="ch-dot" style="background:#f5a623"></div><span class="nav-text">Email</span><span class="nav-badge dim">2</span></div>
+    <div class="nav-item" onclick="filterCh('jira')"><div class="ch-dot" style="background:#2684ff"></div><span class="nav-text">Jira</span><span class="nav-badge dim">1</span></div>
+
+    <div class="nav-label-section">Manage</div>
+    <div class="nav-item" onclick="nav('rules',this)">
+      <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      <span class="nav-text">Rules</span>
+    </div>
+    <div class="nav-item" onclick="nav('analytics',this)">
+      <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="nav-text">Analytics</span>
+    </div>
+  </div>
+
+  <div class="sidebar-foot">
+    <div class="ava">ZW</div>
+    <div class="foot-info">
+      <div class="foot-name">Ziv Wais</div>
+      <div class="foot-plan">Pro Plan</div>
+    </div>
+    <button class="ico-btn" title="Settings">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ═══ Main ═══ -->
+<div class="main">
+  <header class="topbar">
+    <span class="topbar-title" id="topbar-title">Inbox</span>
+    <div class="topbar-spacer"></div>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-inp" id="search-inp" placeholder="Search notifications…">
+      <kbd class="kbd">⌘K</kbd>
+    </div>
+    <div class="bell-wrap">
+      <button class="ico-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+      <div class="bell-dot"></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ── Inbox ── -->
+    <div class="view active" id="view-inbox">
+      <div class="inbox-wrap">
+        <div class="list-col">
+          <div class="filter-bar">
+            <div class="chip on" data-f="all" onclick="setFilter('all',this)">All</div>
+            <div class="chip" data-f="unread" onclick="setFilter('unread',this)"><div class="chip-dot" style="background:var(--accent)"></div>Unread</div>
+            <div class="chip" data-f="starred" onclick="setFilter('starred',this)">Starred</div>
+            <div class="chip" data-f="snoozed" onclick="setFilter('snoozed',this)">Snoozed</div>
+            <div class="f-space"></div>
+            <button class="sort-btn">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="9" y2="18"/></svg>
+              Newest
+            </button>
+          </div>
+          <div class="n-list" id="n-list"></div>
+        </div>
+        <div class="detail-col">
+          <div class="detail-panel" id="detail-panel">
+            <div class="empty-st">
+              <div class="empty-ill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div class="empty-h">Nothing selected</div>
+              <div class="empty-p">Click any notification to read the full content and take action on it.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Analytics ── -->
+    <div class="view" id="view-analytics">
+      <div class="analytics-wrap">
+        <div class="view-head">
+          <div class="view-h1">Analytics</div>
+          <div class="view-sub">Notification activity for the past 30 days</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card sc-purple">
+            <div class="stat-lbl">Total received</div>
+            <div class="stat-val" style="color:var(--accent)">284</div>
+            <div class="stat-chg up">↑ 12% vs last month</div>
+          </div>
+          <div class="stat-card sc-green">
+            <div class="stat-lbl">Actioned</div>
+            <div class="stat-val" style="color:var(--green)">201</div>
+            <div class="stat-chg up">↑ 8% vs last month</div>
+          </div>
+          <div class="stat-card sc-coral">
+            <div class="stat-lbl">Snoozed</div>
+            <div class="stat-val" style="color:var(--coral)">31</div>
+            <div class="stat-chg dn">↓ 3% vs last month</div>
+          </div>
+          <div class="stat-card sc-yellow">
+            <div class="stat-lbl">Avg. response time</div>
+            <div class="stat-val" style="color:var(--yellow);font-size:26px">4.2m</div>
+            <div class="stat-chg up">↑ 22% faster</div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="chart-card">
+            <div class="card-h">Daily activity</div>
+            <div class="card-sub">Notifications received per day</div>
+            <div class="bar-chart" id="bar-chart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="card-h">By channel</div>
+            <div class="card-sub">Distribution breakdown</div>
+            <div class="ch-list" id="ch-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Rules ── -->
+    <div class="view" id="view-rules">
+      <div class="rules-wrap">
+        <div class="rules-hdr">
+          <div>
+            <div class="view-h1">Automation Rules</div>
+            <div class="view-sub">Triage and route notifications automatically.</div>
+          </div>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Rule
+          </button>
+        </div>
+        <div id="rules-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+// ─ Source definitions ────────────────────────────────────────
+const SRC = {
+  github: {
+    name:'GitHub', color:'#58a759', bg:'rgba(88,167,89,.12)',
+    icon:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>`
+  },
+  slack: {
+    name:'Slack', color:'#e01e5a', bg:'rgba(224,30,90,.1)',
+    icon:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zM15.165 17.688a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.313A2.527 2.527 0 0 1 24 15.165a2.528 2.528 0 0 1-2.522 2.523h-6.313z"/></svg>`
+  },
+  calendar: {
+    name:'Calendar', color:'#4285f4', bg:'rgba(66,133,244,.1)',
+    icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`
+  },
+  email: {
+    name:'Email', color:'#f5a623', bg:'rgba(245,166,35,.1)',
+    icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`
+  },
+  jira: {
+    name:'Jira', color:'#2684ff', bg:'rgba(38,132,255,.1)',
+    icon:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005zm5.723-5.756H5.736a5.215 5.215 0 0 0 5.215 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.762a1.005 1.005 0 0 0-1.001-1.005zM23.013 0H11.455a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24.018 12.49V1.005A1.005 1.005 0 0 0 23.013 0z"/></svg>`
+  }
+};
+
+// ─ Data ─────────────────────────────────────────────────────
+const NOTIFS = [
+  { id:1,  src:'github',   unread:true,  star:true,  snooze:false,
+    title:'PR #124 merged into main',
+    prev:'Feature: Dark mode support — merged by @alexkumar',
+    body:'Pull request #124 "Feature: Dark mode support" has been successfully merged into main by @alexkumar.\n\nThe PR included 47 changed files, 2,341 additions, and 891 deletions. CI pipeline passed all 148 tests.\n\nThis release is now pending deployment to staging.',
+    tags:[{l:'merged',c:'var(--green)',bg:'rgba(62,205,164,.1)'}],
+    time:'2m ago', ts:Date.now()-2*6e4 },
+  { id:2,  src:'slack',    unread:true,  star:false, snooze:false,
+    title:'@lisa.chen mentioned you',
+    prev:"Hey, can you review the design specs? I've left some comments…",
+    body:"Hey, can you review the design specs I shared last week? I've left comments on the Figma file and would love your feedback before the client call Thursday.\n\nAlso — are you free for a quick sync tomorrow at 2pm?",
+    tags:[{l:'#design',c:'var(--accent)',bg:'rgba(124,92,252,.1)'}],
+    time:'14m ago', ts:Date.now()-14*6e4 },
+  { id:3,  src:'calendar', unread:true,  star:false, snooze:false,
+    title:'Design Review in 15 minutes',
+    prev:'Design Review — Conf Room A, Floor 3',
+    body:'Your "Design Review" meeting starts in 15 minutes.\n\nLocation: Conference Room A, 3rd Floor\nAttendees: Lisa Chen, Tom Watson, Sarah Park, +4 others\n\nAgenda: Q4 product roadmap review and design handoff.',
+    tags:[{l:'reminder',c:'var(--yellow)',bg:'rgba(245,183,49,.1)'},{l:'in 15m',c:'var(--coral)',bg:'rgba(232,116,92,.1)'}],
+    time:'15m ago', ts:Date.now()-15*6e4 },
+  { id:4,  src:'email',    unread:true,  star:false, snooze:false,
+    title:'Invoice #INV-2847 paid — $144.00',
+    prev:'Your Figma Professional subscription has been renewed',
+    body:'Thank you! Your Figma Professional subscription has been renewed.\n\nInvoice #INV-2847\nAmount: $144.00\nDate: June 12, 2026\nPaid via: Visa ending in 4242\n\nYour subscription is valid through June 2027. Download the invoice from your billing dashboard.',
+    tags:[{l:'billing',c:'var(--yellow)',bg:'rgba(245,166,35,.1)'}],
+    time:'42m ago', ts:Date.now()-42*6e4 },
+  { id:5,  src:'github',   unread:true,  star:true,  snooze:false,
+    title:'Build failed: production-deploy',
+    prev:'Workflow failed on main — 3 errors detected',
+    body:'The production-deploy workflow has failed on the main branch.\n\n3 errors detected:\n• ESLint: 2 unused variables in src/components/Dashboard.tsx\n• Jest: 1 failing test in auth.test.ts (timeout)\n• TypeScript: Implicit any type in utils/format.ts:84\n\nPlease review and re-run the workflow.',
+    tags:[{l:'failed',c:'var(--red)',bg:'rgba(240,101,117,.1)'},{l:'urgent',c:'var(--coral)',bg:'rgba(232,116,92,.1)'}],
+    time:'1h ago', ts:Date.now()-36e5 },
+  { id:6,  src:'slack',    unread:false, star:true,  snooze:false,
+    title:'#general — Team lunch rescheduled',
+    prev:'Team lunch is rescheduled to Friday at 1pm. RSVP by tomorrow.',
+    body:'Team lunch has been rescheduled from Thursday to Friday at 1:00 PM.\n\nVenue: The Workshop Kitchen, 42 Market St\n\nPlease RSVP by tomorrow EOD so we can confirm the reservation. Reply with ✅ if you can make it.',
+    tags:[{l:'#general',c:'var(--accent)',bg:'rgba(124,92,252,.1)'}],
+    time:'2h ago', ts:Date.now()-72e5 },
+  { id:7,  src:'github',   unread:false, star:false, snooze:false,
+    title:'Issue #89 assigned to you',
+    prev:'Fix mobile layout on dashboard — priority: high',
+    body:'Issue #89 "Fix mobile layout on dashboard" has been assigned to you by @tom.watson.\n\nPriority: High\nLabels: bug, mobile, dashboard\nMilestone: v2.4.0\n\nThe mobile nav breaks at 375px viewport. Users on iPhone SE are unable to access the settings menu.',
+    tags:[{l:'bug',c:'var(--red)',bg:'rgba(240,101,117,.1)'},{l:'high priority',c:'var(--coral)',bg:'rgba(232,116,92,.1)'}],
+    time:'3h ago', ts:Date.now()-108e5 },
+  { id:8,  src:'jira',     unread:false, star:false, snooze:false,
+    title:'PROJ-451 moved to In Review',
+    prev:'Authentication refactor moved by @tom.watson',
+    body:'Ticket PROJ-451 "Authentication Refactor" has been moved to "In Review" by @tom.watson.\n\nStory points: 8\nSprint: Sprint 24 (Jun 10–24)\nLinked PRs: #119, #121\n\nPlease schedule a code review session this week.',
+    tags:[{l:'in review',c:'#2684ff',bg:'rgba(38,132,255,.1)'}],
+    time:'5h ago', ts:Date.now()-18e6 },
+  { id:9,  src:'calendar', unread:false, star:false, snooze:true,
+    title:'Daily standup — Tomorrow 9:30 AM',
+    prev:'Recurring: Daily standup • Google Meet',
+    body:'Reminder: Daily standup meeting tomorrow at 9:30 AM.\n\nGoogle Meet link: meet.google.com/abc-defg-hij\nDuration: 15 minutes\n\nAgenda: Status updates, blockers, priorities for the day.',
+    tags:[{l:'recurring',c:'var(--t2)',bg:'rgba(126,126,168,.1)'},{l:'snoozed',c:'var(--t3)',bg:'var(--bg4)'}],
+    time:'6h ago', ts:Date.now()-216e5 },
+  { id:10, src:'email',    unread:false, star:false, snooze:false,
+    title:"Re: Project proposal feedback",
+    prev:"Sarah Johnson: Looks great overall! A few minor suggestions…",
+    body:"Hi,\n\nLooks great overall! A few minor suggestions:\n\n1. Section 3 could use more detail on technical architecture\n2. The timeline in section 5 seems optimistic — maybe add a buffer week?\n3. Budget breakdown is very clear, well done.\n\nLet's discuss Thursday.\n\nBest, Sarah",
+    tags:[],
+    time:'1d ago', ts:Date.now()-864e5 },
+  { id:11, src:'slack',    unread:false, star:false, snooze:false,
+    title:'#design-system — 3 unread messages',
+    prev:'@mike: Updated button tokens. @anna: Spacing scale discussion…',
+    body:'#design-system has 3 unread messages:\n\n@mike.r: Updated the button component tokens — Figma library is synced.\n\n@anna.k: Can we discuss the spacing scale? 8px base feels large for dense layouts.\n\n@lisa.chen: New icon set is ready for review in "Icons v3" page.',
+    tags:[{l:'#design-system',c:'var(--accent)',bg:'rgba(124,92,252,.1)'}],
+    time:'1d ago', ts:Date.now()-936e5 },
+  { id:12, src:'github',   unread:false, star:false, snooze:false,
+    title:'New comment on PR #118',
+    prev:'@sara.dev: Left 4 review comments — mostly style suggestions',
+    body:'@sara.dev left a review on PR #118 "Refactor: Component architecture update".\n\nReview: Approved with suggestions\n4 comments:\n• Consider extracting useNotifications hook into its own file\n• Prop types for <NotifItem> could be more specific\n• Minor: prefer const over let at lines 44–47\n• Nice work on the performance optimization!',
+    tags:[{l:'approved',c:'var(--green)',bg:'rgba(62,205,164,.1)'}],
+    time:'2d ago', ts:Date.now()-1728e5 },
+];
+
+const RULES_DATA = [
+  { id:1, active:true,  color:'var(--accent)', bg:'rgba(124,92,252,.12)',
+    icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+    name:'Auto-star urgent GitHub alerts',
+    desc:'If source is GitHub and title contains "failed" or "urgent" → Star it' },
+  { id:2, active:true,  color:'var(--t2)',    bg:'rgba(126,126,168,.1)',
+    icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M17 17H3a1 1 0 0 1-1-1V5"/><path d="M21 7v9a1 1 0 0 1-1 1"/><path d="M14.5 3.1C13.7 3 12.9 3 12 3a9 9 0 0 0-9 9"/></svg>`,
+    name:'Snooze weekend emails',
+    desc:'If source is Email and received Sat/Sun → Snooze until Monday 9am' },
+  { id:3, active:false, color:'#2684ff',      bg:'rgba(38,132,255,.1)',
+    icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+    name:'Mark Jira status changes as read',
+    desc:'If source is Jira and event type is "status change" → Mark as read' },
+  { id:4, active:true,  color:'var(--yellow)', bg:'rgba(245,183,49,.1)',
+    icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
+    name:'Push calendar 15-min reminders',
+    desc:'If source is Calendar and type is "reminder" → Send push notification' },
+  { id:5, active:false, color:'#e01e5a',      bg:'rgba(224,30,90,.1)',
+    icon:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    name:'Bundle Slack channel messages',
+    desc:'If source is Slack and type is "channel message" → Digest every 2h' },
+];
+
+// ─ State ────────────────────────────────────────────────────
+let S = { view:'inbox', filter:'all', chFilter:null, sel:null, q:'' };
+
+// ─ Nav ──────────────────────────────────────────────────────
+function nav(view, el) {
+  S.view = view; S.sel = null;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const titles = { inbox:'Inbox', analytics:'Analytics', rules:'Automation Rules' };
+  document.getElementById('topbar-title').textContent = titles[view] || 'Inbox';
+  if (view === 'analytics') renderAnalytics();
+  if (view === 'rules') renderRules();
+}
+
+function filterCh(ch) {
+  S.chFilter = S.chFilter === ch ? null : ch;
+  S.filter = 'all';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  document.querySelector('.chip[data-f="all"]').classList.add('on');
+  nav('inbox', document.querySelector('.nav-item'));
+  renderList();
+}
+
+function setFilter(f, el) {
+  S.filter = f; S.chFilter = null;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  if (el) el.classList.add('on');
+  renderList();
+}
+
+// ─ List ─────────────────────────────────────────────────────
+function renderList() {
+  const q = S.q.toLowerCase();
+  let items = NOTIFS.filter(n => {
+    if (S.filter === 'unread'  && !n.unread)  return false;
+    if (S.filter === 'starred' && !n.star)    return false;
+    if (S.filter === 'snoozed' && !n.snooze)  return false;
+    if (S.chFilter && n.src !== S.chFilter)   return false;
+    if (q && !n.title.toLowerCase().includes(q) && !n.prev.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  const now8h = Date.now() - 8*36e5;
+  const today = items.filter(n => n.ts > now8h);
+  const older = items.filter(n => n.ts <= now8h);
+
+  let html = '';
+  if (today.length) { html += `<div class="n-group">Today</div>`; today.forEach((n,i) => html += itemHTML(n,i)); }
+  if (older.length) { html += `<div class="n-group">Earlier</div>`; older.forEach((n,i) => html += itemHTML(n, today.length+i)); }
+  if (!items.length) html = `<div style="padding:44px 20px;text-align:center;color:var(--t3);font-size:13px">No notifications match this filter</div>`;
+
+  const list = document.getElementById('n-list');
+  list.innerHTML = html;
+  list.querySelectorAll('.n-item').forEach(el =>
+    el.addEventListener('click', () => openDetail(+el.dataset.id))
+  );
+
+  // Update unread badge
+  const unread = NOTIFS.filter(n => n.unread).length;
+  document.getElementById('badge-inbox').textContent = unread || '';
+  document.getElementById('badge-inbox').style.display = unread ? '' : 'none';
+}
+
+function itemHTML(n, idx) {
+  const s = SRC[n.src];
+  return `
+  <div class="n-item${n.unread?' unread':''}${S.sel===n.id?' sel':''}" data-id="${n.id}" style="animation-delay:${idx*25}ms">
+    <div class="n-src-ico" style="background:${s.bg};color:${s.color}">${s.icon}</div>
+    <div class="n-body">
+      <div class="n-top">
+        <span class="n-src-name" style="color:${s.color}">${s.name}</span>
+        <span class="n-time">${n.time}</span>
+      </div>
+      <div class="n-title">${n.title}</div>
+      <div class="n-preview">${n.prev}</div>
+    </div>
+    <div class="n-acts">
+      <button class="act-btn" title="${n.star?'Unstar':'Star'}" onclick="toggleStar(event,${n.id})">
+        <svg viewBox="0 0 24 24" fill="${n.star?'var(--yellow)':'none'}" stroke="${n.star?'var(--yellow)':'currentColor'}" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </button>
+      <button class="act-btn" title="Mark read" onclick="markRead(event,${n.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+
+function openDetail(id) {
+  S.sel = id;
+  const n = NOTIFS.find(x => x.id === id);
+  if (!n) return;
+  n.unread = false;
+  const s = SRC[n.src];
+  const panel = document.getElementById('detail-panel');
+  panel.className = 'detail-panel loaded';
+  const tags = n.tags.map(t => `<span class="tag" style="color:${t.c};background:${t.bg};border-color:${t.c}55">${t.l}</span>`).join('');
+  const body = n.body.split('\n').map(l => l ? `<p>${l}</p>` : '').join('');
+  const dateStr = new Date(n.ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  panel.innerHTML = `
+  <div class="d-content">
+    <div class="d-head">
+      <div class="d-src-ico" style="background:${s.bg};color:${s.color}">${s.icon}</div>
+      <div class="d-meta">
+        <div class="d-ch" style="color:${s.color}">${s.name}</div>
+        <div class="d-ts">${n.time} · ${dateStr}</div>
+      </div>
+      <button class="act-btn" style="width:32px;height:32px" title="${n.star?'Unstar':'Star'}" onclick="toggleStar(event,${n.id})">
+        <svg viewBox="0 0 24 24" fill="${n.star?'var(--yellow)':'none'}" stroke="${n.star?'var(--yellow)':'currentColor'}" stroke-width="2" stroke-linecap="round" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </button>
+    </div>
+    <div class="d-title">${n.title}</div>
+    ${tags ? `<div class="d-tags">${tags}</div>` : ''}
+    <div class="d-body">${body}</div>
+    <div class="d-acts">
+      <button class="btn btn-primary" onclick="markRead(event,${n.id})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Mark done
+      </button>
+      <button class="btn btn-secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Snooze
+      </button>
+      <button class="btn btn-ghost">Archive</button>
+    </div>
+  </div>`;
+  renderList();
+}
+
+function toggleStar(e, id) {
+  e.stopPropagation();
+  const n = NOTIFS.find(x => x.id === id);
+  if (n) n.star = !n.star;
+  renderList();
+  if (S.sel === id) openDetail(id);
+}
+
+function markRead(e, id) {
+  e.stopPropagation();
+  const n = NOTIFS.find(x => x.id === id);
+  if (n) n.unread = false;
+  renderList();
+}
+
+// ─ Analytics ────────────────────────────────────────────────
+function renderAnalytics() {
+  const vals = [12,8,19,14,22,16,11,18,25,9,17,21,14,6];
+  const lbls = ['M','T','W','T','F','S','S','M','T','W','T','F','S','S'];
+  const mx = Math.max(...vals);
+  document.getElementById('bar-chart').innerHTML = vals.map((v,i) => `
+    <div class="bar-col">
+      <div class="bar-inner">
+        <div class="bar" style="height:${Math.round(v/mx*100)}%;background:${i>=7?'var(--accent)':'var(--bg4)'};opacity:${.35+i/vals.length*.65}"></div>
+      </div>
+      <span class="bar-lbl">${lbls[i]}</span>
+    </div>`).join('');
+
+  const chs = [
+    {k:'github',n:42,p:85},{k:'slack',n:31,p:62},{k:'email',n:19,p:38},{k:'calendar',n:14,p:28},{k:'jira',n:8,p:16}
+  ];
+  document.getElementById('ch-list').innerHTML = chs.map(c => {
+    const s = SRC[c.k];
+    return `<div class="ch-row">
+      <div class="ch-ico" style="background:${s.bg};color:${s.color}">${s.icon}</div>
+      <span class="ch-name">${s.name}</span>
+      <div class="ch-prog"><div class="ch-bar" style="width:${c.p}%;background:${s.color}"></div></div>
+      <span class="ch-num">${c.n}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─ Rules ────────────────────────────────────────────────────
+function renderRules() {
+  document.getElementById('rules-list').innerHTML = RULES_DATA.map(r => `
+    <div class="rule-card">
+      <div class="rule-ico" style="background:${r.bg};color:${r.color}">${r.icon}</div>
+      <div class="rule-info">
+        <div class="rule-name">${r.name}</div>
+        <div class="rule-desc">${r.desc}</div>
+      </div>
+      <div class="toggle${r.active?' on':''}" onclick="toggleRule(${r.id},this)"></div>
+    </div>`).join('');
+}
+
+function toggleRule(id, el) {
+  const r = RULES_DATA.find(x => x.id === id);
+  if (r) r.active = !r.active;
+  el.classList.toggle('on');
+}
+
+// ─ Search ───────────────────────────────────────────────────
+document.getElementById('search-inp').addEventListener('input', e => {
+  S.q = e.target.value;
+  if (S.view === 'inbox') renderList();
+});
+
+// ─ Keyboard ─────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('search-inp').focus();
+  }
+});
+
+// ─ Init ─────────────────────────────────────────────────────
+renderList();
+</script>
+</body>
+</html>
