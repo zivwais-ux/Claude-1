@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<title>היום של אייח</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0e18;display:flex;justify-content:center;align-items:center;height:100vh}
+canvas{image-rendering:pixelated;cursor:pointer}
+</style>
+</head>
+<body>
+<canvas id="c" width="520" height="390"></canvas>
+<script>
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+(function resize(){const s=Math.min(innerWidth/520,innerHeight/390);cv.style.width=520*s+'px';cv.style.height=390*s+'px';}());
+addEventListener('resize',()=>{const s=Math.min(innerWidth/520,innerHeight/390);cv.style.width=520*s+'px';cv.style.height=390*s+'px';});
+
+// Input
+const keys={};let mx=0,my=0,clicked=false;
+function pos(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*520/r.width,(e.clientY-r.top)*390/r.height];}
+addEventListener('keydown',e=>{keys[e.code]=true;});
+addEventListener('keyup',e=>{keys[e.code]=false;});
+cv.addEventListener('mousemove',e=>{[mx,my]=pos(e);});
+cv.addEventListener('click',e=>{[mx,my]=pos(e);clicked=true;});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+
+// State
+const G={
+  sc:'title', time:36000,
+  done:{uniform:false,toilet:false,shower:false,call:false},
+  clues:0, tick:0,
+  dlg:'', notif:'', notifT:0,
+  phone:false, phoneT:0,
+  // tp battle
+  tp:{rolls:[],php:100,shake:0,combo:0,comboT:0,over:false,win:false},
+  // shower
+  sh:{prog:0,over:false},
+};
+const SPEED=120, CALL_AT=[28000,17000];
+const called=new Set();
+let lastT=0;
+
+function fmt(s){const h=s/3600|0,m=(s%3600)/60|0,ss=s%60|0;return`${h}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;}
+function box(x,y,bx,by,bw,bh){return x>=bx&&x<=bx+bw&&y>=by&&y<=by+bh;}
+function rr(x,y,w,h,r=6){g.beginPath();g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.arcTo(x+w,y,x+w,y+r,r);g.lineTo(x+w,y+h-r);g.arcTo(x+w,y+h,x+w-r,y+h,r);g.lineTo(x+r,y+h);g.arcTo(x,y+h,x,y+h-r,r);g.lineTo(x,y+r);g.arcTo(x,y,x+r,y,r);g.closePath();}
+function dlg(t){G.dlg=t;}
+function notif(t){G.notif=t;G.notifT=180;}
+function lbl(x,y,t,col='#fff'){const w=g.measureText(t).width;g.fillStyle='rgba(0,0,0,0.65)';g.fillRect(x-w/2-5,y-13,w+10,17);g.fillStyle=col;g.font='bold 11px Arial';g.textAlign='center';g.fillText(t,x,y);}
+
+// ── Character ──────────────────────────────────────────────────────────────
+function drawAich(x,y,sc=1,uni=true,boom=false,bob=0){
+  g.save();g.translate(x,y+bob);g.scale(sc,sc);
+  if(boom){
+    g.fillStyle='#ff4400';
+    for(let i=0;i<10;i++){const a=i*Math.PI*2/10+G.tick*0.05;g.fillRect(Math.cos(a)*25-3,Math.sin(a)*25-3,7,7);}
+    g.fillStyle='#ffaa00';g.beginPath();g.arc(0,0,15,0,Math.PI*2);g.fill();
+    g.restore();return;
+  }
+  const UC=uni?'#4a5c1a':'#1e55bb', UD=uni?'#3a4a12':'#163a99', UP=uni?'#3a4a12':'#1a2880', BT=uni?'#100c04':'#111';
+  // shadow
+  g.fillStyle='rgba(0,0,0,0.18)';g.beginPath();g.ellipse(0,50,16,4,0,0,Math.PI*2);g.fill();
+  // boots
+  g.fillStyle=BT;g.fillRect(-14,38,12,14);g.fillRect(2,38,12,14);g.fillRect(-16,46,14,6);g.fillRect(2,46,14,6);
+  // legs
+  g.fillStyle=UP;g.fillRect(-13,22,11,20);g.fillRect(2,22,11,20);
+  // belt + buckle
+  g.fillStyle='#110e04';g.fillRect(-13,20,26,4);g.fillStyle='#d4a020';g.fillRect(-3,20,6,4);
+  // body
+  g.fillStyle=UC;g.fillRect(-13,0,26,22);
+  // pockets
+  g.fillStyle=UD;g.fillRect(-10,6,7,6);g.fillRect(3,6,7,6);
+  // rank stripes
+  g.fillStyle='#d4a020';g.fillRect(-12,2,10,2);g.fillRect(-12,5,10,2);
+  // collar
+  g.fillStyle=UD;g.fillRect(-4,0,8,5);
+  // arms
+  g.fillStyle=UC;g.fillRect(-18,0,6,18);g.fillRect(12,0,6,18);
+  g.fillStyle='#ffcc88';g.fillRect(-18,16,6,8);g.fillRect(12,16,6,8);
+  // head
+  g.fillStyle='#ffcc88';g.beginPath();g.arc(0,-16,18,0,Math.PI*2);g.fill();
+  // shine
+  g.fillStyle='rgba(255,255,255,0.38)';g.beginPath();g.ellipse(-4,-22,7,4,-0.4,0,Math.PI*2);g.fill();
+  // tufts
+  g.strokeStyle='#6b3a18';g.lineWidth=1.5;
+  [-1,1].forEach(s=>{g.beginPath();g.moveTo(s*17,-18);g.lineTo(s*21,-27);g.stroke();g.beginPath();g.moveTo(s*18,-11);g.lineTo(s*23,-13);g.stroke();});
+  // beret
+  if(uni){g.fillStyle='#3a4a12';g.beginPath();g.ellipse(0,-30,20,8,0,Math.PI,0);g.fill();g.fillStyle='#2a3a0a';g.beginPath();g.ellipse(0,-28,22,5,0,Math.PI,0);g.fill();g.fillStyle='#d4a020';g.beginPath();g.arc(-8,-28,3,0,Math.PI*2);g.fill();}
+  // glasses
+  g.strokeStyle='#222';g.lineWidth=2;
+  g.beginPath();g.arc(-7,-14,7,0,Math.PI*2);g.stroke();
+  g.beginPath();g.arc(7,-14,7,0,Math.PI*2);g.stroke();
+  g.lineWidth=1;g.beginPath();g.moveTo(-17,-14);g.lineTo(-14,-14);g.stroke();
+  g.beginPath();g.moveTo(14,-14);g.lineTo(17,-14);g.stroke();
+  // eyes
+  g.fillStyle='#1a1a1a';g.beginPath();g.arc(-7,-14,3,0,Math.PI*2);g.fill();g.beginPath();g.arc(7,-14,3,0,Math.PI*2);g.fill();
+  g.fillStyle='rgba(255,255,255,0.7)';g.fillRect(-8,-15,2,2);g.fillRect(6,-15,2,2);
+  // mouth
+  g.strokeStyle='#a03020';g.lineWidth=1.5;g.beginPath();g.moveTo(-5,-6);g.quadraticCurveTo(0,-4,5,-6);g.stroke();
+  g.restore();
+}
+
+// ── HUD ────────────────────────────────────────────────────────────────────
+function drawHUD(){
+  if(['title','tp_battle','shower_mini','win','lose'].includes(G.sc))return;
+  g.fillStyle='#0e1520';g.fillRect(0,0,520,48);
+  const p=G.time/36000;
+  g.fillStyle='#1a1a1a';g.fillRect(8,8,280,18);
+  g.fillStyle=p>0.5?'#2a9a2a':p>0.25?'#b8900a':'#cc2222';g.fillRect(8,8,280*p,18);
+  if(p<0.15&&G.tick%16<8){g.fillStyle='rgba(255,50,50,0.4)';g.fillRect(8,8,280*p,18);}
+  g.strokeStyle='#333';g.lineWidth=1;g.strokeRect(8,8,280,18);
+  g.fillStyle='#fff';g.font='bold 12px monospace';g.textAlign='left';g.fillText('⏰ '+fmt(G.time),11,41);
+  const tk=[['🪖',G.done.uniform],['🚽',G.done.toilet],['🚿',G.done.shower],['📱',G.done.call]];
+  tk.forEach(([ic,d],i)=>{g.fillStyle=d?'#44ee44':'#ee3333';g.font='bold 12px Arial';g.textAlign='center';g.fillText(ic+(d?'✓':'…'),305+i*36,38);});
+  g.fillStyle='#ffd700';g.font='bold 12px Arial';g.textAlign='right';g.fillText('🔍 '+G.clues+'/4',512,20);
+  for(let i=0;i<4;i++){g.fillStyle=i<G.clues?'#ffd700':'#333';g.beginPath();g.arc(474+i*10,38,4,0,Math.PI*2);g.fill();}
+  drawAich(500,24,0.46,G.done.uniform);
+}
+
+// ── Dialog / Notif ────────────────────────────────────────────────────────
+function drawDlg(){
+  if(!G.dlg)return;
+  const lines=G.dlg.split('\n'),h=lines.length*23+44;
+  g.fillStyle='rgba(0,0,0,0.9)';rr(60,130,400,h,12);g.fill();
+  g.strokeStyle='#c8a820';g.lineWidth=2;rr(60,130,400,h,12);g.stroke();
+  g.fillStyle='#fff';g.font='15px Arial';g.textAlign='center';
+  lines.forEach((l,i)=>g.fillText(l,260,160+i*23));
+  g.fillStyle='#888';g.font='11px Arial';g.fillText('לחץ להמשיך',260,130+h-12);
+}
+function drawNotif(){
+  if(G.notifT<=0)return;
+  const a=Math.min(1,G.notifT/40),tw=g.measureText(G.notif).width;
+  g.fillStyle=`rgba(0,0,0,${0.72*a})`;rr(260-tw/2-14,302,tw+28,30,7);g.fill();
+  g.fillStyle=`rgba(255,210,0,${a})`;g.font='bold 13px Arial';g.textAlign='center';g.fillText(G.notif,260,323);
+}
+
+// ── Phone ─────────────────────────────────────────────────────────────────
+function drawPhone(){
+  if(!G.phone)return;
+  const sh=Math.sin(G.tick*0.45)*4;
+  g.fillStyle='rgba(0,0,0,0.82)';g.fillRect(0,0,520,390);
+  g.fillStyle='#111';rr(155+sh,110,210,230,18);g.fill();
+  g.strokeStyle='#4CAF50';g.lineWidth=3;rr(155+sh,110,210,230,18);g.stroke();
+  g.fillStyle='#0a0a0a';rr(162+sh,118,196,140,10);g.fill();
+  g.fillStyle='rgba(0,120,200,0.08)';rr(162+sh,118,196,140,10);g.fill();
+  g.fillStyle='#fff';g.font='bold 14px Arial';g.textAlign='center';g.fillText('📱 שיחה נכנסת',260+sh,155);
+  g.fillStyle='#4CAF50';g.font='bold 22px Arial';g.fillText('מילואים',260+sh,185);
+  g.fillStyle='rgba(255,255,255,0.45)';g.font='11px Arial';g.fillText('נשאר '+Math.ceil(G.phoneT)+'s',260+sh,208);
+  drawAich(260+sh,248,0.65,true);
+  g.fillStyle='#4CAF50';rr(165,348,90,30,8);g.fill();
+  g.fillStyle='#fff';g.font='bold 13px Arial';g.textAlign='center';g.fillText('📞 ענה',210,368);
+  g.fillStyle='#e53935';rr(265,348,90,30,8);g.fill();g.fillStyle='#fff';g.fillText('❌ דחה',310,368);
+  if(clicked){
+    if(box(mx,my,165,348,90,30)){G.phone=false;G.done.call=true;called.add('answered');dlg('📞 מילואים:\n"אייח! עם קרחת לא מגיעים!\nתמצא את ד"ר שלמה במעבדה - מהר!"');}
+    else if(box(mx,my,265,348,90,30)){G.phone=false;notif('📵 דחית את מילואים... ביצת מהלך.');}
+  }
+}
+
+// ── TITLE ─────────────────────────────────────────────────────────────────
+function drawTitle(){
+  const gr=g.createLinearGradient(0,0,0,390);gr.addColorStop(0,'#0a1424');gr.addColorStop(1,'#0a1a0a');
+  g.fillStyle=gr;g.fillRect(0,0,520,390);
+  g.fillStyle='rgba(255,255,255,0.5)';
+  for(let i=0;i<50;i++)g.fillRect((Math.sin(i*177.3)*260+260)|0,(Math.cos(i*113.7)*195+100)|0,i%3?1:2,i%3?1:2);
+  drawAich(260,250,2.2,true,false,Math.sin(G.tick*0.05)*4);
+  g.fillStyle='rgba(0,0,0,0.55)';rr(90,35,340,75,14);g.fill();
+  g.strokeStyle='#c8a820';g.lineWidth=2;rr(90,35,340,75,14);g.stroke();
+  g.fillStyle='#ffd700';g.font='bold 36px Arial';g.textAlign='center';g.fillText('היום של אייח',260,80);
+  g.fillStyle='#aac88a';g.font='14px Arial';g.fillText('מצא תרופה לקרחת לפני שמתפוצץ!',260,105);
+  const bx=175,by=315,bw=170,bh=42,hov=box(mx,my,bx,by,bw,bh);
+  g.fillStyle=hov?'#c8a820':'#7a6010';rr(bx,by,bw,bh,10);g.fill();
+  g.strokeStyle='#ffd700';g.lineWidth=2;rr(bx,by,bw,bh,10);g.stroke();
+  g.fillStyle='#111';g.font='bold 19px Arial';g.textAlign='center';g.fillText('▶ התחל',260,342);
+  g.fillStyle='rgba(255,255,255,0.35)';g.font='11px Arial';g.fillText('לחץ אובייקטים לאינטראקציה | WASD להזזה',260,375);
+  if(clicked&&box(mx,my,bx,by,bw,bh))G.sc='bedroom';
+}
+
+// ── BEDROOM ───────────────────────────────────────────────────────────────
+function drawBedroom(){
+  // walls + floor
+  g.fillStyle='#c8a060';g.fillRect(0,48,520,252);
+  g.fillStyle='rgba(0,0,0,0.04)';for(let x=0;x<520;x+=40)for(let y=48;y<300;y+=40)g.fillRect(x,y,20,20);
+  g.fillStyle='#8a6030';g.fillRect(0,300,520,90);
+  g.fillStyle='rgba(255,255,255,0.04)';for(let x=0;x<520;x+=60)g.fillRect(x,300,58,88);
+  // IDF poster
+  g.fillStyle='#3a4a0a';g.fillRect(370,72,90,64);g.strokeStyle='#2a3a0a';g.lineWidth=2;g.strokeRect(370,72,90,64);
+  g.fillStyle='#d4a020';g.font='bold 9px Arial';g.textAlign='center';g.fillText('🪖 מילואים 2024',415,100);g.fillText('תגיע בזמן!',415,116);
+  // Bed
+  g.fillStyle='#6b3a2a';g.fillRect(20,148,200,118);g.fillStyle='#e8d0a8';g.fillRect(25,153,190,56);g.fillStyle='#c8b090';g.fillRect(30,157,180,32);
+  g.strokeStyle='#4a2a1a';g.lineWidth=2;g.strokeRect(20,148,200,118);lbl(120,210,'🛏️ מיטה');
+  // Wardrobe
+  const wc=G.done.uniform?'#4a5c1a':'#5c3a20';
+  g.fillStyle=wc;g.fillRect(378,72,102,188);g.fillStyle='rgba(0,0,0,0.18)';g.fillRect(429,72,2,188);
+  g.strokeStyle='#222';g.lineWidth=1;g.strokeRect(378,72,102,188);
+  g.fillStyle='#c8a820';g.fillRect(425,155,6,10);rr(420,152,16,16,3);g.stroke();
+  lbl(429,170,G.done.uniform?'✓ מדים ירוקים':'👗 ארון מדים',G.done.uniform?'#7dff7d':'#fff');
+  // Bathroom door
+  g.fillStyle='#7a4a28';g.fillRect(218,210,84,90);g.fillStyle='#c8a820';g.beginPath();g.arc(296,255,4,0,Math.PI*2);g.fill();
+  g.strokeStyle='#4a2a10';g.lineWidth=2;g.strokeRect(218,210,84,90);lbl(260,255,'🚪 שירותים');
+  // Exit door
+  g.fillStyle=G.done.uniform?'#3a4a1a':'#444';g.fillRect(20,268,74,90);g.fillStyle='#c8a820';g.beginPath();g.arc(85,313,4,0,Math.PI*2);g.fill();
+  g.strokeStyle='#222';g.lineWidth=1;g.strokeRect(20,268,74,90);lbl(57,313,G.done.uniform?'🚪 יציאה':'🔒 לבש מדים!',G.done.uniform?'#fff':'#ff8888');
+  // Phone on nightstand
+  g.fillStyle='#8a5a28';g.fillRect(235,185,52,36);g.fillStyle='#0a0a0a';g.fillRect(240,188,42,26);g.fillStyle='rgba(0,150,200,0.2)';g.fillRect(240,188,42,26);
+  lbl(261,203,'📱');
+  drawAich(260,285,1.2,G.done.uniform);
+  if(clicked&&!G.dlg){
+    if(box(mx,my,20,148,200,118))dlg('😴 אין זמן לישון!\nיש לך קרחת ומילואים מחכה!');
+    else if(box(mx,my,378,72,102,188)){if(!G.done.uniform){G.done.uniform=true;notif('🪖 לבשת מדי צבא ירוקים! אייח מוכן!');}else dlg('כבר לבוש במדים. נראה מצוין!');}
+    else if(box(mx,my,218,210,84,90))G.sc='bathroom';
+    else if(box(mx,my,20,268,74,90)){if(G.done.uniform)G.sc='outside';else dlg('🪖 קודם לבש מדים!\nלא יוצאים ככה לרחוב.');}
+    else if(box(mx,my,235,185,52,36))dlg('📱 אין הודעות עדיין...\nאולי מישהו יתקשר בקרוב?');
+  }
+}
+
+// ── BATHROOM ──────────────────────────────────────────────────────────────
+function drawBathroom(){
+  g.fillStyle='#c8e8f5';g.fillRect(0,48,520,252);
+  g.strokeStyle='rgba(80,130,180,0.25)';g.lineWidth=1;for(let x=0;x<520;x+=28)for(let y=48;y<300;y+=28)g.strokeRect(x,y,28,28);
+  g.fillStyle='#9abccc';g.fillRect(0,300,520,90);
+  // Toilet
+  g.fillStyle='#f2f2f2';g.fillRect(28,158,100,132);g.fillStyle='#e2e2e2';g.fillRect(28,158,100,22);
+  g.strokeStyle='#aaa';g.lineWidth=2;g.strokeRect(28,158,100,132);
+  g.fillStyle='#f9f9f9';g.beginPath();g.ellipse(78,260,38,24,0,0,Math.PI*2);g.fill();g.strokeStyle='#ccc';g.lineWidth=1;g.stroke();
+  lbl(78,215,G.done.toilet?'✓ אסלה':'🚽 אסלה',G.done.toilet?'#7dff7d':'#fff');
+  // Shower cabin
+  g.fillStyle='rgba(140,200,228,0.4)';g.fillRect(328,62,162,228);g.strokeStyle='#68a0c0';g.lineWidth=3;g.strokeRect(328,62,162,228);
+  g.fillStyle='#aaa';g.fillRect(394,66,30,10);
+  if(G.tick%24<12){g.fillStyle='rgba(100,200,255,0.6)';for(let i=0;i<6;i++)g.fillRect(338+i*22,(68+((G.tick*3)+i*10)%100)|0,3,12);}
+  lbl(409,175,G.done.shower?'✓ מקלחת':'🚿 מקלחת',G.done.shower?'#7dff7d':'#fff');
+  // Medicine cabinet
+  g.fillStyle='#909090';g.fillRect(148,82,132,76);g.fillStyle='#c4ccd4';g.fillRect(152,86,62,68);g.fillStyle='#c4ccd4';g.fillRect(216,86,60,68);
+  g.strokeStyle='#666';g.lineWidth=2;g.strokeRect(148,82,132,76);lbl(214,120,'💊 ארון תרופות');
+  // Back
+  g.fillStyle='#7a4a28';g.fillRect(8,306,72,36);g.strokeStyle='#4a2a10';g.lineWidth=1;g.strokeRect(8,306,72,36);lbl(44,325,'← חזרה');
+  drawAich(260,285,1.2,G.done.uniform);
+  if(clicked&&!G.dlg){
+    if(box(mx,my,28,158,100,132)){if(!G.done.toilet){initTP();G.sc='tp_battle';}else dlg('כבר עשית שירותים.');}
+    else if(box(mx,my,328,62,162,228)){if(!G.done.shower){initSH();G.sc='shower_mini';}else dlg('כבר התרחצת!');}
+    else if(box(mx,my,148,82,132,76)){
+      if(G.done.toilet||G.done.shower){G.clues=Math.min(4,G.clues+1);dlg('💊 מצאת: "ויטמין B7 + X99"\nרשמת! +רמז');}
+      else dlg('🚽 עשה שירותים קודם!');
+    }
+    else if(box(mx,my,8,306,72,36))G.sc='bedroom';
+  }
+}
+
+// ── TP BATTLE ─────────────────────────────────────────────────────────────
+function initTP(){
+  G.tp={
+    rolls:[
+      {x:110,y:140,hp:35,mx:35,vx:1.2,at:55,hit:0},
+      {x:270,y:105,hp:45,mx:45,vx:-0.9,at:80,hit:0},
+      {x:410,y:148,hp:28,mx:28,vx:1,at:45,hit:0},
+    ],
+    php:100,shake:0,combo:0,comboT:0,over:false,win:false
+  };
+}
+function drawTPBattle(){
+  g.fillStyle='#dcc8d0';g.fillRect(0,0,520,390);
+  g.fillStyle='rgba(180,30,50,0.06)';g.fillRect(0,0,520,390);
+  g.fillStyle='#b0909a';g.fillRect(0,300,520,90);
+  // Title bar
+  g.fillStyle='rgba(0,0,0,0.6)';rr(120,8,280,34,7);g.fill();
+  g.fillStyle='#ff4444';g.font='bold 16px Arial';g.textAlign='center';g.fillText('⚔️ קרב נייר טואלט! ⚔️',260,30);
+  const tp=G.tp;
+  if(!tp.over){
+    // update
+    tp.rolls.forEach(r=>{
+      if(r.hp<=0)return;
+      r.x+=r.vx;if(r.x<36||r.x>484)r.vx*=-1;
+      r.at--;
+      if(r.at<=0){tp.php=Math.max(0,tp.php-9);tp.shake=9;r.at=35+Math.random()*55|0;}
+      if(r.hit>0)r.hit--;
+    });
+    if(tp.shake>0)tp.shake--;
+    if(tp.comboT>0)tp.comboT--;
+    if(!tp.rolls.filter(r=>r.hp>0).length){tp.over=true;tp.win=true;}
+    if(tp.php<=0){tp.over=true;tp.win=false;}
+  }
+  const sx=tp.shake?(Math.random()-.5)*tp.shake:0;
+  // draw rolls
+  tp.rolls.forEach((r,i)=>{
+    if(r.hp<=0)return;
+    g.save();g.translate(r.x+sx,r.y);g.rotate(Math.sin(G.tick*.1+i)*.12);
+    g.fillStyle=r.hit?'#ffaaaa':'#f2f0e8';g.beginPath();g.arc(0,0,28,0,Math.PI*2);g.fill();
+    g.strokeStyle='#ccc8b0';g.lineWidth=2;g.stroke();
+    g.fillStyle='#e0ddd0';g.beginPath();g.arc(0,0,14,0,Math.PI*2);g.fill();
+    g.fillStyle='#888';g.beginPath();g.arc(0,0,6,0,Math.PI*2);g.fill();
+    // evil eyes
+    g.fillStyle='#ff0000';g.beginPath();g.arc(-10,-8,4,0,Math.PI*2);g.fill();g.beginPath();g.arc(10,-8,4,0,Math.PI*2);g.fill();
+    g.fillStyle='#fff';g.fillRect(-11,-9,2,2);g.fillRect(9,-9,2,2);
+    // spiral
+    g.strokeStyle='rgba(190,188,170,0.45)';g.lineWidth=1;
+    [10,18,26].forEach(rr2=>{g.beginPath();g.arc(0,0,rr2,0,Math.PI*2);g.stroke();});
+    g.restore();
+    // hp bar
+    g.fillStyle='#600';g.fillRect(r.x-28,r.y-42,56,8);
+    g.fillStyle='#f44';g.fillRect(r.x-28,r.y-42,56*(r.hp/r.mx),8);
+    g.strokeStyle='#222';g.lineWidth=1;g.strokeRect(r.x-28,r.y-42,56,8);
+  });
+  drawAich(260+sx,285,1.2,G.done.uniform);
+  // player HP
+  g.fillStyle='rgba(0,0,0,0.6)';rr(10,308,170,28,5);g.fill();
+  g.fillStyle='#600';g.fillRect(14,314,154,14);
+  g.fillStyle=tp.php>40?'#44ee44':'#ee2222';g.fillRect(14,314,154*(tp.php/100),14);
+  g.strokeStyle='#444';g.lineWidth=1;g.strokeRect(14,314,154,14);
+  g.fillStyle='#fff';g.font='bold 11px Arial';g.textAlign='left';g.fillText('❤️ '+tp.php,18,328);
+  // combo
+  if(tp.comboT>0){g.fillStyle=`rgba(255,210,0,${tp.comboT/30})`;g.font='bold 24px Arial';g.textAlign='center';g.fillText('COMBO x'+tp.combo+'!',260,185);}
+  // hint
+  g.fillStyle='rgba(255,255,255,0.65)';g.font='12px Arial';g.textAlign='center';g.fillText('לחץ על הגלילות!',260,362);
+  // click on rolls
+  if(clicked&&!tp.over){
+    tp.rolls.forEach(r=>{
+      if(r.hp<=0)return;
+      if(Math.hypot(mx-r.x,my-r.y)<30){r.hp-=18;r.hit=8;tp.combo++;tp.comboT=28;if(r.hp<=0)notif('💥 גלילה הושמדה!');}
+    });
+  }
+  // end screen
+  if(tp.over){
+    g.fillStyle='rgba(0,0,0,0.78)';g.fillRect(0,0,520,390);
+    if(tp.win){
+      g.fillStyle='#44ff44';g.font='bold 28px Arial';g.textAlign='center';g.fillText('🎉 ניצחת בקרב!',260,160);
+      g.fillStyle='#fff';g.font='16px Arial';g.fillText('אייח שרד את נייר הטואלט האויב',260,200);
+    } else {
+      g.fillStyle='#ff4444';g.font='bold 28px Arial';g.textAlign='center';g.fillText('😵 הנייר ניצח...',260,160);
+    }
+    g.fillStyle='#ffd700';g.font='13px Arial';g.textAlign='center';g.fillText('לחץ '+(tp.win?'להמשיך':'לנסות שוב'),260,250);
+    if(clicked){if(tp.win){G.done.toilet=true;G.sc='bathroom';notif('🚽 שירותים הושלמו! ✓');}else initTP();}
+  }
+}
+
+// ── SHOWER MINI ───────────────────────────────────────────────────────────
+function initSH(){G.sh={prog:0,over:false};}
+function drawShowerMini(){
+  g.fillStyle='#90c8e0';g.fillRect(0,0,520,390);
+  const wa=0.15+Math.sin(G.tick*.18)*.06;
+  g.fillStyle=`rgba(80,160,240,${wa})`;g.fillRect(0,0,520,390);
+  for(let i=0;i<18;i++){{g.fillStyle='rgba(200,232,255,0.42)';g.fillRect(((i*73+G.tick*4)%520)|0,((i*47+G.tick*6)%280)|0,3,(i*17)%32+8);}}
+  // Bar
+  g.fillStyle='rgba(0,0,0,0.62)';rr(90,26,340,52,8);g.fill();
+  g.fillStyle='#104880';g.fillRect(100,34,300,32);
+  const col=G.sh.prog<50?`rgb(0,${110+G.sh.prog*3|0},255)`:`rgb(${(G.sh.prog-50)*5|0},${220-(G.sh.prog-50)*3|0},200)`;
+  g.fillStyle=col;g.fillRect(100,34,300*(G.sh.prog/100),32);
+  g.strokeStyle='rgba(255,255,255,0.5)';g.lineWidth=2;g.strokeRect(100,34,300,32);
+  g.fillStyle='#fff';g.font='bold 15px Arial';g.textAlign='center';g.fillText('❄️ עמידות: '+Math.round(G.sh.prog)+'%',260,56);
+  const shk=G.sh.prog>0&&!G.sh.over?(Math.random()-.5)*(6-G.sh.prog*.05):0;
+  drawAich(260+shk,230,1.4,G.done.uniform);
+  // Snowflakes
+  for(let i=0;i<7;i++){g.fillStyle='rgba(210,238,255,0.8)';g.font='18px Arial';g.textAlign='center';g.fillText('❄️',180+i*25,140+Math.sin(G.tick*.25+i)*22);}
+  // Progress
+  const pressing=clicked||keys['Space']||keys['KeyF']||keys['Enter'];
+  if(pressing&&!G.sh.over){G.sh.prog=Math.min(100,G.sh.prog+2.2);}
+  else if(!G.sh.over) G.sh.prog=Math.max(0,G.sh.prog-.35);
+  if(G.sh.prog>=100&&!G.sh.over){G.sh.over=true;G.done.shower=true;G.clues=Math.min(4,G.clues+1);}
+  g.fillStyle='rgba(255,255,255,0.88)';g.font='bold 16px Arial';g.textAlign='center';g.fillText('לחץ / Space להתמודד עם המים הקרים!',260,298);
+  g.fillStyle='rgba(255,255,255,0.55)';g.font='13px Arial';g.fillText('מלא ל-100% כדי לסיים',260,320);
+  if(G.sh.over){
+    g.fillStyle='rgba(0,40,0,0.82)';g.fillRect(0,0,520,390);
+    g.fillStyle='#44ff44';g.font='bold 26px Arial';g.textAlign='center';g.fillText('🚿 מקלחת קרה הושלמה! ✓',260,170);
+    g.fillStyle='#fff';g.font='15px Arial';g.fillText('נזכרת: "ד"ר שלמה במעבדה עם נוסחת X99!" +רמז',260,212);
+    g.fillStyle='#ffd700';g.font='13px Arial';g.fillText('לחץ להמשיך',260,262);
+    if(clicked)G.sc='bathroom';
+  }
+}
+
+// ── OUTSIDE ───────────────────────────────────────────────────────────────
+function drawOutside(){
+  const sky=g.createLinearGradient(0,48,0,280);sky.addColorStop(0,'#3a80cc');sky.addColorStop(1,'#68b0f0');
+  g.fillStyle=sky;g.fillRect(0,48,520,252);
+  g.fillStyle='#428a28';g.fillRect(0,280,520,110);
+  g.fillStyle='#346a1c';for(let x=0;x<520;x+=7)g.fillRect(x,280,4,Math.sin(x*.4)*3+6|0);
+  // sun
+  g.fillStyle='#ffe060';g.beginPath();g.arc(448,86,28,0,Math.PI*2);g.fill();
+  g.fillStyle='rgba(255,224,80,0.28)';g.beginPath();g.arc(448,86,42,0,Math.PI*2);g.fill();
+  // Clouds
+  [[80,80],[200,65],[350,90]].forEach(([cx,cy])=>{g.fillStyle='rgba(255,255,255,0.85)';g.beginPath();g.arc(cx,cy,22,0,Math.PI*2);g.arc(cx+20,cy-8,16,0,Math.PI*2);g.arc(cx+38,cy+4,14,0,Math.PI*2);g.fill();});
+  // Pharmacy
+  g.fillStyle='#1e721e';g.fillRect(38,126,140,154);g.fillStyle='#155415';g.fillRect(38,126,140,32);
+  g.fillStyle='#fff';g.font='bold 11px Arial';g.textAlign='center';g.fillText('💊 בית מרקחת',108,148);
+  g.fillStyle='#7ab8e8';g.fillRect(52,168,42,52);g.fillRect(122,168,42,52);
+  g.strokeStyle='rgba(255,255,255,0.6)';g.lineWidth=1;g.strokeRect(52,168,42,52);g.strokeRect(122,168,42,52);
+  g.fillStyle='#6b3a20';g.fillRect(95,238,30,50);lbl(108,258,'💊 מרקחת');
+  // Lab
+  g.fillStyle='#1e1e8a';g.fillRect(358,108,148,172);g.fillStyle='#141460';g.fillRect(358,108,148,36);
+  g.fillStyle='#fff';g.font='bold 11px Arial';g.textAlign='center';g.fillText('🧪 מעבדה',432,132);
+  g.fillStyle='rgba(180,180,255,0.5)';g.fillRect(368,152,44,52);g.fillRect(462,152,34,52);
+  g.strokeStyle='rgba(120,120,255,0.4)';g.lineWidth=1;g.strokeRect(368,152,44,52);g.strokeRect(462,152,34,52);
+  g.fillStyle='#6b3a20';g.fillRect(416,242,30,50);lbl(432,262,'🧪 מעבדה');
+  // Back
+  g.fillStyle='#3a4a12';g.fillRect(8,308,72,36);g.strokeStyle='#2a3a0a';g.lineWidth=1;g.strokeRect(8,308,72,36);lbl(44,326,'← הבית');
+  drawAich(260,282,1.2,G.done.uniform);
+  if(clicked&&!G.dlg){
+    if(box(mx,my,38,126,140,154)||box(mx,my,95,238,30,50))G.sc='pharmacy';
+    else if(box(mx,my,358,108,148,172)||box(mx,my,416,242,30,50))G.sc='lab';
+    else if(box(mx,my,8,308,72,36))G.sc='bedroom';
+  }
+}
+
+// ── PHARMACY ──────────────────────────────────────────────────────────────
+function drawPharmacy(){
+  g.fillStyle='#e8f8e0';g.fillRect(0,48,520,252);g.fillStyle='#aad0a0';g.fillRect(0,300,520,90);
+  // Counter
+  g.fillStyle='#808860';g.fillRect(110,202,300,68);g.fillStyle='#a8a878';g.fillRect(115,196,290,10);
+  g.strokeStyle='#606640';g.lineWidth=2;g.strokeRect(110,202,300,68);
+  // Shelves
+  g.fillStyle='#70b070';g.fillRect(18,72,168,188);g.strokeStyle='#488848';g.lineWidth=2;g.strokeRect(18,72,168,188);
+  for(let s=0;s<4;s++){
+    g.fillStyle='#508050';g.fillRect(18,72+s*47,168,4);
+    ['#e84040','#4090e8','#40c040','#e8c040'].forEach((c,b)=>{g.fillStyle=c;g.fillRect(28+b*38,80+s*47,24,34);g.fillStyle='rgba(255,255,255,0.3)';g.fillRect(30+b*38,82+s*47,8,12);});
+  }
+  lbl(102,168,'🗄️ מדפים');
+  // Pharmacist
+  g.fillStyle='#f4dcc0';g.beginPath();g.arc(390,162,26,0,Math.PI*2);g.fill();
+  g.fillStyle='#fff';g.fillRect(368,188,44,72);g.strokeStyle='#ddd';g.lineWidth=1;g.strokeRect(368,188,44,72);
+  g.fillStyle='#dd2222';g.font='14px Arial';g.textAlign='center';g.fillText('+',390,210);
+  lbl(390,248,'👩‍⚕️ פרמקולוגית');
+  // Back
+  g.fillStyle='#488848';g.fillRect(8,308,72,36);g.strokeStyle='#2a5a2a';g.lineWidth=1;g.strokeRect(8,308,72,36);lbl(44,326,'← חזרה');
+  drawAich(260,285,1.2,G.done.uniform);
+  if(clicked&&!G.dlg){
+    if(box(mx,my,18,72,168,188)){G.clues=Math.min(4,G.clues+1);dlg('📋 מצאת פתק:\n"שמן שום + שמן קוקוס + X99 = ✓"\n+רמז!');}
+    else if(box(mx,my,364,136,52,124))dlg('👩‍⚕️ רחל: "שמעת על ד"ר שלמה?\nהוא במעבדה - תגיד ששלחתי אותך!"');
+    else if(box(mx,my,8,308,72,36))G.sc='outside';
+  }
+}
+
+// ── LAB ───────────────────────────────────────────────────────────────────
+function drawLab(){
+  g.fillStyle='#e8e8ff';g.fillRect(0,48,520,252);g.fillStyle='#b8b8e8';g.fillRect(0,300,520,90);
+  // Table
+  g.fillStyle='#8888c8';g.fillRect(18,98,228,178);g.fillStyle='#6868a8';g.fillRect(18,98,228,12);
+  g.strokeStyle='#4848a0';g.lineWidth=2;g.strokeRect(18,98,228,178);
+  // Beakers
+  const canMix=G.clues>=4&&G.done.shower&&G.done.toilet&&G.done.call;
+  ['#e84040','#40e840','#4040e8','#e8e840'].forEach((c,i)=>{
+    g.fillStyle=c;g.fillRect(32+i*52,118,30,44);g.fillStyle='rgba(255,255,255,0.28)';g.fillRect(36+i*52,121,10,16);
+    g.fillStyle='rgba(0,0,0,0.18)';g.fillRect(32+i*52,152,30,10);
+    // Bubbles animate
+    if(canMix&&G.tick%20<10){g.fillStyle=c;g.beginPath();g.arc(42+i*52,115,4,0,Math.PI*2);g.fill();}
+  });
+  if(canMix){g.strokeStyle='#ffd700';g.lineWidth=3;g.beginPath();g.arc(132,178,60,0,Math.PI*2);g.stroke();}
+  lbl(132,178,canMix?'⚗️ ערבב! (לחץ)':'⚗️ שולחן מעבדה',canMix?'#ffd700':'#fff');
+  // Scientist
+  g.fillStyle='#ffc880';g.beginPath();g.arc(406,150,28,0,Math.PI*2);g.fill();
+  g.fillStyle='#fff';g.fillRect(380,178,52,80);g.strokeStyle='#ddd';g.lineWidth=1;g.strokeRect(380,178,52,80);
+  g.fillStyle='#808080';g.beginPath();g.arc(406,135,30,Math.PI,0);g.fill();
+  g.fillStyle='#111';g.beginPath();g.arc(398,153,4,0,Math.PI*2);g.fill();g.beginPath();g.arc(414,153,4,0,Math.PI*2);g.fill();
+  lbl(406,244,"👨‍🔬 ד''ר שלמה");
+  // Back
+  g.fillStyle='#3838a0';g.fillRect(8,308,72,36);g.strokeStyle='#1818a0';g.lineWidth=1;g.strokeRect(8,308,72,36);lbl(44,326,'← חזרה');
+  drawAich(260,285,1.2,G.done.uniform);
+  if(clicked&&!G.dlg){
+    if(box(mx,my,18,98,228,178)){
+      if(canMix){G.sc='win';}
+      else{
+        const m=[];
+        if(G.clues<4)m.push('רמזים: '+G.clues+'/4');
+        if(!G.done.shower)m.push('מקלחת');
+        if(!G.done.toilet)m.push('שירותים');
+        if(!G.done.call)m.push('שיחת מילואים');
+        dlg('⚗️ חסר:\n'+m.join(' | '));
+      }
+    }
+    else if(box(mx,my,376,122,60,140)){
+      if(G.done.call)dlg("👨‍🔬 ד''ר שלמה:\n\"רחל שלחה אותך? נהדר!\nכל הרכיבים על השולחן - ערבב!\"");
+      else dlg("👨‍🔬 ד''ר שלמה:\n\"מי שלח אותך?! אני עסוק!\nחכה לשיחה ממישהו שמכיר אותי.\"");
+    }
+    else if(box(mx,my,8,308,72,36))G.sc='outside';
+  }
+}
+
+// ── WIN ────────────────────────────────────────────────────────────────────
+function drawWin(){
+  const gr=g.createLinearGradient(0,0,0,390);gr.addColorStop(0,'#081808');gr.addColorStop(1,'#102810');
+  g.fillStyle=gr;g.fillRect(0,0,520,390);
+  for(let i=0;i<35;i++){g.fillStyle='#ffd700';g.fillRect((Math.sin(i*137+G.tick*.025)*260+260)|0,(Math.cos(i*97+G.tick*.015)*80+70)|0,i%3?1:2,i%3?1:2);}
+  g.fillStyle='#44ff44';g.font='bold 38px Arial';g.textAlign='center';g.fillText('🎉 ניצחת! 🎉',260,72);
+  // Aich WITH HAIR
+  g.save();g.translate(260,228);
+  drawAich(0,0,2.2,true);
+  g.fillStyle='#5a3010';g.beginPath();g.arc(0,-40,25,Math.PI,0);g.fill();
+  g.beginPath();g.arc(-8,-37,9,0,Math.PI*2);g.fill();
+  g.beginPath();g.arc(8,-37,9,0,Math.PI*2);g.fill();
+  g.restore();
+  g.fillStyle='#ccffcc';g.font='17px Arial';g.textAlign='center';g.fillText('תרופת X99 עבדה! שיער חזר!',260,328);
+  g.fillStyle='#aaddff';g.font='14px Arial';g.fillText('אייח יוצא למילואים עם ביטחון מלא 🪖',260,352);
+  g.fillStyle='#777';g.font='12px Arial';g.fillText('לחץ לשחק שוב',260,378);
+  if(clicked)reset();
+}
+
+// ── LOSE ───────────────────────────────────────────────────────────────────
+function drawLose(){
+  const gr=g.createLinearGradient(0,0,0,390);gr.addColorStop(0,'#200000');gr.addColorStop(1,'#4a0800');
+  g.fillStyle=gr;g.fillRect(0,0,520,390);
+  g.fillStyle='#ff4400';g.font='bold 52px Arial';g.textAlign='center';g.fillText('💥 BUM! 💥',260,120);
+  drawAich(260,250,2.2,G.done.uniform,true);
+  g.fillStyle='#fff';g.font='20px Arial';g.textAlign='center';g.fillText('נגמר הזמן! לקרחת היה הניצחון.',260,328);
+  g.fillStyle='#999';g.font='13px Arial';g.fillText('לחץ לנסות שוב',260,360);
+  if(clicked)reset();
+}
+
+// ── RESET ─────────────────────────────────────────────────────────────────
+function reset(){
+  G.sc='title';G.time=36000;G.done={uniform:false,toilet:false,shower:false,call:false};
+  G.clues=0;G.tick=0;G.dlg='';G.notif='';G.notifT=0;G.phone=false;G.phoneT=0;
+  called.clear();
+}
+
+// ── MAIN LOOP ─────────────────────────────────────────────────────────────
+function loop(ts){
+  const dt=lastT?(ts-lastT)/1000:0;lastT=ts;G.tick++;
+  const inGame=!['title','tp_battle','shower_mini','win','lose'].includes(G.sc);
+  if(inGame){
+    G.time=Math.max(0,G.time-dt*SPEED);
+    if(G.notifT>0)G.notifT-=dt*60;
+    if(G.phone){G.phoneT-=dt;if(G.phoneT<=0){G.phone=false;notif('📵 פספסת את מילואים...');}}
+    CALL_AT.forEach(t=>{if(G.time<=t&&!called.has(t)&&!G.done.call&&!G.phone){called.add(t);G.phone=true;G.phoneT=14;}});
+    if(G.time<=0)G.sc='lose';
+  }
+  g.clearRect(0,0,520,390);
+  switch(G.sc){
+    case'title':drawTitle();break;
+    case'bedroom':drawBedroom();break;
+    case'bathroom':drawBathroom();break;
+    case'tp_battle':drawTPBattle();break;
+    case'shower_mini':drawShowerMini();break;
+    case'outside':drawOutside();break;
+    case'pharmacy':drawPharmacy();break;
+    case'lab':drawLab();break;
+    case'win':drawWin();break;
+    case'lose':drawLose();break;
+  }
+  drawHUD();
+  if(G.dlg)drawDlg();
+  else if(G.phone)drawPhone();
+  else drawNotif();
+  clicked=false;
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
