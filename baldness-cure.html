@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>תרופה לקרחת</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111;display:flex;justify-content:center;align-items:center;height:100vh}
+canvas{image-rendering:pixelated;cursor:pointer}
+</style>
+</head>
+<body>
+<canvas id="c" width="480" height="360"></canvas>
+<script>
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+function resize(){const s=Math.min(innerWidth/480,innerHeight/360);cv.style.width=480*s+'px';cv.style.height=360*s+'px';}
+resize();addEventListener('resize',resize);
+
+// State
+const ST={
+  scene:'bedroom',
+  time:36000,       // 10 game-hours in game-seconds
+  tasks:{bath:false,shower:false,call:false},
+  clues:0,
+  won:false,boom:false,
+  msg:'',msgT:0,
+  phone:false,phoneT:0,
+  dialog:'',
+};
+const SPEED=120; // game-seconds per real-second
+let lastT=0, callDone=false;
+
+// Mouse
+let mx=0,my=0;
+function getPos(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*480/r.width,(e.clientY-r.top)*360/r.height];}
+cv.addEventListener('mousemove',e=>{[mx,my]=getPos(e);});
+cv.addEventListener('click',e=>{const[x,y]=getPos(e);onClick(x,y);});
+
+// Scenes: {bg, floor, items:[{x,y,w,h,label,color,act}]}
+const SCENES={
+  bedroom:{bg:'#c8a86a',floor:'#a07840',items:[
+    {x:20,y:100,w:100,h:80,label:'🛏️ מיטה',c:'#8B4513',act:'bed'},
+    {x:340,y:80,w:100,h:160,label:'🪟 חלון',c:'#87ceeb',act:'window'},
+    {x:180,y:260,w:90,h:40,label:'🚪 שירותים',c:'#6b3a2a',act:'→bathroom'},
+    {x:290,y:260,w:90,h:40,label:'🚪 יציאה',c:'#4a2a1a',act:'→outside'},
+  ]},
+  bathroom:{bg:'#d0eaf5',floor:'#b0cce0',items:[
+    {x:30,y:160,w:90,h:110,label:'🚽 אסלה',c:'#f0f0f0',act:'toilet'},
+    {x:300,y:80,w:130,h:190,label:'🚿 מקלחת',c:'#90c8e0',act:'shower'},
+    {x:155,y:90,w:100,h:60,label:'💊 ארון',c:'#aaa',act:'cabinet'},
+    {x:10,y:290,w:80,h:35,label:'← חזרה',c:'#6b3a2a',act:'→bedroom'},
+  ]},
+  outside:{bg:'#87ceeb',floor:'#5a8a2a',items:[
+    {x:30,y:140,w:130,h:130,label:'💊 בית מרקחת',c:'#228B22',act:'→pharmacy'},
+    {x:310,y:140,w:130,h:130,label:'🧪 מעבדה',c:'#4169E1',act:'→lab'},
+    {x:10,y:290,w:80,h:35,label:'← הבית',c:'#6b3a2a',act:'→bedroom'},
+  ]},
+  pharmacy:{bg:'#eef8e8',floor:'#c0d8a0',items:[
+    {x:30,y:80,w:140,h:170,label:'🗄️ מדפים',c:'#78b878',act:'shelf'},
+    {x:300,y:90,w:100,h:170,label:'👨‍⚕️ פרמקולוג',c:'#f4a460',act:'pharm'},
+    {x:10,y:290,w:80,h:35,label:'← חזרה',c:'#87ceeb',act:'→outside'},
+  ]},
+  lab:{bg:'#eeeeff',floor:'#c0c0e0',items:[
+    {x:30,y:80,w:180,h:170,label:'⚗️ שולחן מעבדה',c:'#9090d0',act:'labtable'},
+    {x:310,y:90,w:100,h:160,label:"👨‍🔬 ד''ר שלמה",c:'#ffcc88',act:'scientist'},
+    {x:10,y:290,w:80,h:35,label:'← חזרה',c:'#87ceeb',act:'→outside'},
+  ]},
+};
+
+function act(a){
+  if(a.startsWith('→')){ST.scene=a.slice(1);return;}
+  switch(a){
+    case'bed':     dlg('😴 אין זמן לישון! השיחה מתקרבת!'); break;
+    case'window':  dlg('☀️ בוקר טוב. ראשך מבריק בשמש...'); break;
+    case'toilet':
+      if(!ST.tasks.bath){ST.tasks.bath=true;dlg('🚽 סיימת. ✓\n(מצאת פתק ישן: "נוסחת X99 קיימת!")');}
+      else dlg('כבר עשית שירותים.');
+      break;
+    case'shower':
+      if(!ST.tasks.shower){ST.tasks.shower=true;ST.clues=Math.min(3,ST.clues+1);dlg('🚿 מקלחת קרה! ברר!\nנזכרת ששמעת על תרופה מהמעבדה. +רמז');}
+      else dlg('כבר התרחצת.');
+      break;
+    case'cabinet':
+      if(ST.tasks.bath){ST.clues=Math.min(3,ST.clues+1);dlg('💊 מצאת: "ויטמין B7 לשיער" +רמז\nאולי הפרמקולוג יודע מה לעשות?');}
+      else dlg('🚽 עשה שירותים קודם!');
+      break;
+    case'shelf':
+      ST.clues=Math.min(3,ST.clues+1);
+      dlg('📋 המדף ריק. אבל הפרמקולוג\nנראה יודע משהו... +רמז');
+      break;
+    case'pharm':
+      dlg('👨‍⚕️ "צריך X99 ממעבדת ד"ר שלמה.\nאין לי כאן, תלך לשם!"');
+      break;
+    case'labtable':
+      if(ST.clues>=3&&ST.tasks.shower&&ST.tasks.bath&&ST.tasks.call)
+        {ST.won=true;dlg('🧪 ערבבת הכל!\n💊 תרופת X99 מוכנה! 🎉 שיער חוזר!');}
+      else if(ST.clues>=3&&ST.tasks.shower&&ST.tasks.bath)
+        dlg('⚠️ קרוב! אבל עדיין חסר...\nאולי תחכה לשיחה מ"מילואים"?');
+      else
+        dlg('⚗️ חסרים מרכיבים.\nאסוף 3 רמזים + השלם משימות.');
+      break;
+    case'scientist':
+      if(ST.tasks.call) dlg('👨‍🔬 "אה, מילואים שלח אותך!\nתרכיב הכל בשולחן המעבדה!"');
+      else dlg('👨‍🔬 "מי שלח אותך?! אני עסוק!\nאל תפריע לי!"');
+      break;
+  }
+}
+
+function dlg(t){ST.dialog=t;}
+function msg(t){ST.msg=t;ST.msgT=200;}
+
+function onClick(x,y){
+  if(ST.won||ST.boom){reset();return;}
+  if(ST.dialog){ST.dialog='';return;}
+  // Phone buttons
+  if(ST.phone){
+    if(x>140&&x<240&&y>255&&y<290){ST.phone=false;ST.tasks.call=true;callDone=true;dlg('📞 מילואים: "אחי, שמעתי על הבעיה!\nד"ר שלמה במעבדה - הוא יכול לעזור!"');}
+    else if(x>260&&x<360&&y>255&&y<290){ST.phone=false;msg('❌ דחית את השיחה... אולי טעית?');}
+    return;
+  }
+  const sc=SCENES[ST.scene];
+  for(const it of sc.items){
+    if(x>=it.x&&x<=it.x+it.w&&y>=it.y&&y<=it.y+it.h){act(it.act);return;}
+  }
+}
+
+function reset(){
+  Object.assign(ST,{scene:'bedroom',time:36000,tasks:{bath:false,shower:false,call:false},
+    clues:0,won:false,boom:false,msg:'',msgT:0,phone:false,phoneT:0,dialog:''});
+  callDone=false;lastT=0;
+}
+
+function fmtTime(s){
+  const h=s/3600|0,m=(s%3600)/60|0,ss=s%60|0;
+  return `${h}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+
+// Draw bald guy with round glasses
+function drawGuy(x,y,sc=1,explode=false){
+  g.save();g.translate(x,y);g.scale(sc,sc);
+  if(explode){
+    g.fillStyle='#ff4400';
+    for(let i=0;i<8;i++){const a=i*Math.PI/4;g.fillRect(Math.cos(a)*22-4,Math.sin(a)*22-4,8,8);}
+    g.fillStyle='#ffaa00';g.beginPath();g.arc(0,0,16,0,Math.PI*2);g.fill();
+    g.restore();return;
+  }
+  // Body
+  g.fillStyle='#2255bb';g.fillRect(-14,8,28,38);
+  // Collar
+  g.fillStyle='#fff';g.fillRect(-6,8,12,10);
+  // Head
+  g.fillStyle='#ffcc88';g.beginPath();g.arc(0,-2,20,0,Math.PI*2);g.fill();
+  // Shine
+  g.fillStyle='rgba(255,255,255,0.45)';g.beginPath();g.ellipse(-5,-10,6,4,-0.5,0,Math.PI*2);g.fill();
+  // Glasses
+  g.strokeStyle='#222';g.lineWidth=2;
+  g.beginPath();g.arc(-8,0,7,0,Math.PI*2);g.stroke();
+  g.beginPath();g.arc(8,0,7,0,Math.PI*2);g.stroke();
+  g.beginPath();g.moveTo(-1,0);g.lineTo(1,0);g.stroke();
+  // Eyes
+  g.fillStyle='#222';
+  g.beginPath();g.arc(-8,0,3,0,Math.PI*2);g.fill();
+  g.beginPath();g.arc(8,0,3,0,Math.PI*2);g.fill();
+  // Eye gleam
+  g.fillStyle='#fff';g.fillRect(-9,-1,2,2);g.fillRect(7,-1,2,2);
+  // Mouth (worried)
+  g.strokeStyle='#b04030';g.lineWidth=1.5;
+  g.beginPath();g.moveTo(-5,10);g.quadraticCurveTo(0,8,5,10);g.stroke();
+  // Side hair tufts
+  g.strokeStyle='#5a3010';g.lineWidth=1.5;
+  [-1,1].forEach(s=>{
+    g.beginPath();g.moveTo(s*19,-5);g.lineTo(s*23,-14);g.stroke();
+    g.beginPath();g.moveTo(s*20,2);g.lineTo(s*25,-2);g.stroke();
+  });
+  g.restore();
+}
+
+function drawScene(){
+  const sc=SCENES[ST.scene];
+  // Sky/bg
+  g.fillStyle=sc.bg;g.fillRect(0,50,480,210);
+  // Floor
+  g.fillStyle=sc.floor;g.fillRect(0,260,480,100);
+  // Items
+  for(const it of sc.items){
+    const hov=mx>=it.x&&mx<=it.x+it.w&&my>=it.y&&my<=it.y+it.h;
+    g.fillStyle=hov?'#ffe066':it.c;
+    g.fillRect(it.x,it.y,it.w,it.h);
+    g.strokeStyle=hov?'#FFD700':'#222';
+    g.lineWidth=hov?3:1;
+    g.strokeRect(it.x,it.y,it.w,it.h);
+    g.fillStyle='#111';
+    g.font='bold 11px Arial';
+    g.textAlign='center';
+    const lines=it.label.split('\n');
+    lines.forEach((l,i)=>g.fillText(l,it.x+it.w/2,it.y+it.h/2-(lines.length-1)*7+i*14+4));
+  }
+  // Character
+  drawGuy(240,240,1.4,ST.boom);
+  // Scene label
+  const names={bedroom:'🏠 חדר שינה',bathroom:'🚿 שירותים',outside:'🌆 רחוב',pharmacy:'💊 בית מרקחת',lab:'🧪 מעבדה'};
+  g.fillStyle='rgba(0,0,0,0.5)';g.fillRect(150,52,180,22);
+  g.fillStyle='#fff';g.font='13px Arial';g.textAlign='center';
+  g.fillText(names[ST.scene],240,68);
+}
+
+function drawHUD(){
+  g.fillStyle='#1a1a1a';g.fillRect(0,0,480,50);
+  // Timer bar
+  const p=ST.time/36000;
+  g.fillStyle=p>0.3?'#2a8a2a':'#aa2222';
+  g.fillRect(8,8,300*p,18);
+  g.strokeStyle='#555';g.lineWidth=1;g.strokeRect(8,8,300,18);
+  g.fillStyle='#fff';g.font='bold 13px monospace';g.textAlign='left';
+  g.fillText('⏰ '+fmtTime(ST.time),10,42);
+  // Clues
+  g.fillStyle='#ffcc00';g.font='12px Arial';g.textAlign='center';
+  g.fillText('🔍 '+ST.clues+'/3',380,16);
+  // Task icons
+  const tasks=[['🚽',ST.tasks.bath],['🚿',ST.tasks.shower],['📱',ST.tasks.call]];
+  tasks.forEach(([ic,done],i)=>{
+    g.fillStyle=done?'#44ff44':'#ff4444';
+    g.fillText(ic+(done?'✓':'✗'),320+i*32,38);
+  });
+  // Mini character
+  drawGuy(455,25,0.55);
+}
+
+function drawDialog(){
+  if(!ST.dialog)return;
+  const lines=ST.dialog.split('\n');
+  const h=lines.length*20+36;
+  g.fillStyle='rgba(0,0,0,0.88)';
+  roundRect(60,120,360,h,10);g.fill();
+  g.strokeStyle='#FFD700';g.lineWidth=2;
+  roundRect(60,120,360,h,10);g.stroke();
+  g.fillStyle='#fff';g.font='14px Arial';g.textAlign='center';
+  lines.forEach((l,i)=>g.fillText(l,240,148+i*20));
+  g.fillStyle='#888';g.font='11px Arial';
+  g.fillText('לחץ להמשיך',240,120+h-10);
+}
+
+function drawPhone(){
+  if(!ST.phone)return;
+  const sh=Math.sin(Date.now()/70)*3;
+  g.fillStyle='rgba(0,0,0,0.82)';g.fillRect(100,140,280,190);
+  g.strokeStyle='#4CAF50';g.lineWidth=3;g.strokeRect(100,140,280,190);
+  // Phone icon
+  g.fillStyle='#222';g.fillRect(180+sh,150,120,90);
+  g.fillStyle='#1a1a1a';g.fillRect(183+sh,153,114,80);
+  g.fillStyle='#fff';g.font='bold 15px Arial';g.textAlign='center';
+  g.fillText('📱 שיחה נכנסת',240,195);
+  g.fillStyle='#4CAF50';g.font='bold 20px Arial';
+  g.fillText('מילואים',240,220);
+  // Buttons
+  g.fillStyle='#4CAF50';g.fillRect(140,258,100,30);
+  g.fillStyle='#fff';g.font='bold 13px Arial';g.fillText('📞 ענה',190,278);
+  g.fillStyle='#e53935';g.fillRect(260,258,100,30);
+  g.fillStyle='#fff';g.fillText('❌ דחה',310,278);
+  g.fillStyle='rgba(255,255,255,0.5)';g.font='11px Arial';
+  g.fillText('נשאר: '+Math.ceil(ST.phoneT)+'s',240,320);
+}
+
+function drawMsg(){
+  if(ST.msgT<=0)return;
+  g.fillStyle='rgba(0,0,0,0.7)';g.fillRect(60,295,360,52);
+  g.fillStyle='#eee';g.font='12px Arial';g.textAlign='center';
+  ST.msg.split('\n').forEach((l,i)=>g.fillText(l,240,312+i*16));
+}
+
+function drawEnd(){
+  if(ST.won){
+    g.fillStyle='rgba(0,40,0,0.92)';g.fillRect(0,0,480,360);
+    g.fillStyle='#4CAF50';g.font='bold 34px Arial';g.textAlign='center';
+    g.fillText('🎉 ניצחת!',240,90);
+    // Bald guy + hair
+    g.save();g.translate(240,210);
+    drawGuy(0,0,1.8);
+    g.fillStyle='#5a3010';
+    g.beginPath();g.arc(0,-22,24,Math.PI,0);g.fill();
+    g.restore();
+    g.fillStyle='#cfc';g.font='16px Arial';
+    g.fillText('תרופת X99 עבדה! השיער חזר!',240,310);
+    g.fillStyle='#888';g.font='12px Arial';g.fillText('לחץ לשחק שוב',240,340);
+    return;
+  }
+  if(ST.boom){
+    g.fillStyle='rgba(180,40,0,0.92)';g.fillRect(0,0,480,360);
+    g.fillStyle='#ffcc00';g.font='bold 44px Arial';g.textAlign='center';
+    g.fillText('💥 BUM! 💥',240,130);
+    drawGuy(240,230,1.8,true);
+    g.fillStyle='#fff';g.font='20px Arial';g.fillText('נגמר הזמן...',240,300);
+    g.fillStyle='#888';g.font='12px Arial';g.fillText('לחץ לנסות שוב',240,340);
+  }
+}
+
+function roundRect(x,y,w,h,r){
+  g.beginPath();
+  g.moveTo(x+r,y);g.lineTo(x+w-r,y);g.arcTo(x+w,y,x+w,y+r,r);
+  g.lineTo(x+w,y+h-r);g.arcTo(x+w,y+h,x+w-r,y+h,r);
+  g.lineTo(x+r,y+h);g.arcTo(x,y+h,x,y+h-r,r);
+  g.lineTo(x,y+r);g.arcTo(x,y,x+r,y,r);
+  g.closePath();
+}
+
+// Phone triggers: at 8h left and 5h left
+const CALLS=[28800,18000];
+let triggered=new Set();
+
+function loop(ts){
+  const dt=lastT?(ts-lastT)/1000:0;lastT=ts;
+
+  if(!ST.won&&!ST.boom){
+    ST.time=Math.max(0,ST.time-dt*SPEED);
+    if(ST.msgT>0)ST.msgT-=dt*60;
+    // Phone timer
+    if(ST.phone){
+      ST.phoneT-=dt;
+      if(ST.phoneT<=0){ST.phone=false;msg('📵 פספסת את השיחה...');}
+    }
+    // Trigger calls
+    if(!callDone&&!ST.phone){
+      for(const t of CALLS){
+        if(ST.time<=t&&!triggered.has(t)){triggered.add(t);ST.phone=true;ST.phoneT=10;break;}
+      }
+    }
+    if(ST.time<=0)ST.boom=true;
+  }
+
+  // Draw
+  g.clearRect(0,0,480,360);
+  if(ST.won||ST.boom){drawEnd();}
+  else{
+    drawScene();drawHUD();
+    if(ST.dialog)drawDialog();
+    else if(ST.phone)drawPhone();
+    else drawMsg();
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
