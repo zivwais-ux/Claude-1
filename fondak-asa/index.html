@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>פונדק אסא — סטקייה בצומת בית דגן</title>
+<meta name="description" content="פונדק אסא — מסעדת בשרים ותיקה בצומת בית דגן, מאז 1971. סטייקים, שיפודים וסלטים טריים על הגחלים.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&family=Assistant:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: #201811; font-family: 'Assistant', sans-serif; color: #201811; overflow-x: hidden; }
+  a { color: #c8402e; text-decoration: none; }
+  a:hover { color: #e0644f; }
+  ::selection { background: #d69a2d; color: #201811; }
+  img { max-width: 100%; display: block; }
+
+  @keyframes fpMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  a, button { transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease, color .2s ease, opacity .2s ease; }
+  [data-btn]:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,.28); }
+  header nav a:not([data-btn]):hover { color: #d69a2d; }
+  .fp-card { transition: transform .2s ease, box-shadow .2s ease; }
+  .fp-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(32,24,17,.18); }
+  .fp-photo { transition: transform .35s ease, filter .35s ease; }
+  .fp-photo:hover { transform: scale(1.05); filter: saturate(1.15); }
+
+  .fp-photo {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #7a2f22, #c8402e 60%, #d69a2d);
+    color: rgba(244,236,224,.92);
+    font-family: 'Heebo', sans-serif; font-weight: 700; font-size: 15px;
+    text-align: center; padding: 10px;
+  }
+  .fp-photo span { opacity: .9; }
+  .fp-photo .fp-icon { font-size: 30px; display: block; margin-bottom: 6px; }
+
+  [hidden] { display: none !important; }
+  html.a11y-links a { text-decoration: underline !important; }
+  html.a11y-readable, html.a11y-readable * { font-family: Arial, 'Assistant', sans-serif !important; letter-spacing: .03em !important; line-height: 1.75 !important; }
+  footer button:hover { color: #f4ece0 !important; }
+
+  @media (max-width: 860px) {
+    .fp-r1 { grid-template-columns: 1fr !important; }
+    .fp-r2 { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+    .fp-nav { gap: 12px !important; }
+    .fp-nav a.fp-navlink { display: none !important; }
+  }
+  @media (max-width: 520px) {
+    .fp-r2 { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body>
+<div style="background: #f4ece0;">
+
+  <header style="position: sticky; top: 0; z-index: 50; background: rgba(32,24,17,.96); border-bottom: 3px solid #d69a2d;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <a href="#" style="display: flex; align-items: center; gap: 16px;">
+        <img src="assets/logo-cream.png" alt="פונדק אסא סטקייה — צומת בית דגן" style="height: 46px;">
+        <span style="width: 1px; height: 32px; background: rgba(214,154,45,.4);"></span>
+        <span style="font-family: 'Oswald'; font-size: 11px; letter-spacing: 3px; color: #d69a2d;">SINCE 1971</span>
+      </a>
+      <nav class="fp-nav" style="display: flex; align-items: center; gap: 26px; flex-wrap: wrap; justify-content: flex-end;">
+        <a href="#story" class="fp-navlink" style="color: #f4ece0; font-weight: 600; font-size: 15px;">הסיפור</a>
+        <a href="#menu" class="fp-navlink" style="color: #f4ece0; font-weight: 600; font-size: 15px;">תפריט</a>
+        <a href="#gallery" class="fp-navlink" style="color: #f4ece0; font-weight: 600; font-size: 15px;">גלריה</a>
+        <a href="#catering" class="fp-navlink" style="color: #f4ece0; font-weight: 600; font-size: 15px;">אירועים</a>
+        <a href="#visit" class="fp-navlink" style="color: #f4ece0; font-weight: 600; font-size: 15px;">הגעה</a>
+        <a href="tel:0539600888" style="background: #d69a2d; color: #201811; font-weight: 800; padding: 9px 18px; border-radius: 999px; font-size: 15px;">☎ 03-9600888</a>
+      </nav>
+    </div>
+  </header>
+
+  <section style="position: relative; min-height: 92vh; display: flex; align-items: flex-end; overflow: hidden; background: #201811;">
+    <div style="position: absolute; inset: 0;">
+      <div class="fp-photo" style="height: 100%;"><span><span class="fp-icon">🔥</span>פונדק אסא — הפונדק מבחוץ</span></div>
+    </div>
+    <div style="position: absolute; inset: 0; background: linear-gradient(0deg, rgba(20,14,9,.94) 8%, rgba(20,14,9,.35) 55%, rgba(20,14,9,.72) 100%); pointer-events: none;"></div>
+    <div style="position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; width: 100%; padding: 0 24px 72px;">
+      <div style="display: inline-flex; align-items: center; gap: 10px; background: #c8402e; color: #f4ece0; font-family: 'Oswald'; font-weight: 600; letter-spacing: 2px; font-size: 13px; padding: 7px 16px; border-radius: 999px; text-transform: uppercase;">מסעדת הדרכים המיתולוגית · Roadside Steakhouse</div>
+      <h1 style="font-family: 'Heebo'; font-weight: 900; color: #f4ece0; font-size: clamp(48px, 8vw, 104px); line-height: .95; margin: 22px 0 0; text-shadow: 0 4px 30px rgba(0,0,0,.5);">בשר על האש<br><span style="color: #d69a2d;">כמו פעם.</span> כמו שצריך.</h1>
+      <p style="max-width: 620px; font-size: clamp(17px, 2.2vw, 22px); color: #eaded0; margin: 24px 0 0; line-height: 1.5;">54 שנה של סטייקים עסיסיים, שיפודים על הגחלים וסלטים טריים בשפע — בצומת בית דגן, בדיוק במקום שבו עצרתם תמיד.</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 34px;">
+        <a data-btn href="tel:0539600888" style="background: #c8402e; color: #f4ece0; font-family: 'Heebo'; font-weight: 800; font-size: 18px; padding: 15px 30px; border-radius: 999px; box-shadow: 0 8px 24px rgba(200,64,46,.4); white-space: nowrap;">☎ התקשרו אלינו</a>
+        <a data-btn href="https://waze.com/ul?q=פונדק אסא בית דגן" target="_blank" style="background: #d69a2d; color: #201811; font-family: 'Heebo'; font-weight: 800; font-size: 18px; padding: 15px 30px; border-radius: 999px; white-space: nowrap;">📍 נווטו אלינו</a>
+        <a data-btn href="#menu" style="background: transparent; color: #f4ece0; border: 2px solid rgba(244,236,224,.5); font-family: 'Heebo'; font-weight: 800; font-size: 18px; padding: 13px 28px; border-radius: 999px; white-space: nowrap;">לתפריט המלא</a>
+      </div>
+    </div>
+  </section>
+
+  <div style="background: #201811; color: #d69a2d; font-family: 'Oswald'; letter-spacing: 4px; text-transform: uppercase; font-size: 15px; padding: 14px 0; overflow: hidden; white-space: nowrap; border-bottom: 3px solid #c8402e;">
+    <div style="display: inline-block; animation: fpMarquee 28s linear infinite;">
+      <span style="padding: 0 28px;">אנטריקוט על הגחלים ★</span><span style="padding: 0 28px;">חומוס פטריות ★</span><span style="padding: 0 28px;">שיפודי פילה בקר ★</span><span style="padding: 0 28px;">קבב בייתי ★</span><span style="padding: 0 28px;">סלטים טריים ללא חומרים משמרים ★</span><span style="padding: 0 28px;">פתוח 7 ימים בשבוע ★</span><span style="padding: 0 28px;">אנטריקוט על הגחלים ★</span><span style="padding: 0 28px;">חומוס פטריות ★</span><span style="padding: 0 28px;">שיפודי פילה בקר ★</span><span style="padding: 0 28px;">קבב בייתי ★</span><span style="padding: 0 28px;">סלטים טריים ללא חומרים משמרים ★</span><span style="padding: 0 28px;">פתוח 7 ימים בשבוע ★</span>
+    </div>
+  </div>
+
+  <section style="max-width: 1120px; margin: 44px auto; padding: 0 24px;">
+    <div class="fp-r2" style="background: #fff; border-radius: 18px; box-shadow: 0 20px 50px rgba(32,24,17,.14); border: 1px solid rgba(32,24,17,.06); display: grid; grid-template-columns: repeat(4, 1fr); overflow: hidden;">
+      <div style="text-align: center; padding: 30px 12px; border-left: 1px solid rgba(32,24,17,.08);">
+        <div style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 4.5vw, 54px); color: #c8402e; line-height: 1;">54</div>
+        <div style="font-weight: 600; font-size: 15px; margin-top: 8px; color: #5a4a3a;">שנות מוניטין</div>
+      </div>
+      <div style="text-align: center; padding: 30px 12px; border-left: 1px solid rgba(32,24,17,.08);">
+        <div style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 4.5vw, 54px); color: #c8402e; line-height: 1;">7</div>
+        <div style="font-weight: 600; font-size: 15px; margin-top: 8px; color: #5a4a3a;">ימים בשבוע פתוחים</div>
+      </div>
+      <div style="text-align: center; padding: 30px 12px; border-left: 1px solid rgba(32,24,17,.08);">
+        <div style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 4.5vw, 54px); color: #c8402e; line-height: 1;">5.0</div>
+        <div style="font-weight: 600; font-size: 15px; margin-top: 8px; color: #5a4a3a;">דירוג אורחים ★</div>
+      </div>
+      <div style="text-align: center; padding: 30px 12px; border-left: 1px solid rgba(32,24,17,.08);">
+        <div style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 4.5vw, 54px); color: #c8402e; line-height: 1;">∞</div>
+        <div style="font-weight: 600; font-size: 15px; margin-top: 8px; color: #5a4a3a;">בשר על האש</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="story" style="background: #201811; color: #f4ece0; padding: 84px 24px;">
+    <div class="fp-r1" style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center;">
+      <div>
+        <div style="font-family: 'Oswald'; letter-spacing: 3px; color: #d69a2d; font-size: 14px; text-transform: uppercase;">Our Story · הסיפור שלנו</div>
+        <h2 style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 5vw, 58px); line-height: 1.02; margin: 16px 0 0;">מוסד. לא סתם מסעדה.</h2>
+        <p style="font-size: 18px; line-height: 1.7; color: #eaded0; margin: 24px 0 0;">כבר יותר מחמישה עשורים פונדק אסא עומד בליבו של צומת בית דגן — מסעדת דרכים ותיקה שנולדה בשנות ה־70' ולא הפסיקה לצלות מאז. מי שהגיע לכאן בילדותו חוזר עד היום, ומזהה מלבד הטעם המוכר גם את הפנים הידידותיות של צוות שרובו כאן כבר עשרות שנים.</p>
+        <p style="font-size: 18px; line-height: 1.7; color: #eaded0; margin: 16px 0 0;">הכל כאן מושתת על מסורת, משפחתיות ובשר טרי על הגחלים. עוצרים בדרך, יושבים בפנים או באוויר הפתוח, ואוכלים כמו שאוכלים אצל אסא — בלי קיצורי דרך.</p>
+        <div style="display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap;">
+          <span style="border: 1px solid rgba(214,154,45,.5); color: #d69a2d; padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: 14px;">חניה בשפע</span>
+          <span style="border: 1px solid rgba(214,154,45,.5); color: #d69a2d; padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: 14px;">ישיבה בפנים ובחוץ</span>
+          <span style="border: 1px solid rgba(214,154,45,.5); color: #d69a2d; padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: 14px;">מרחב מוגן</span>
+          <span style="border: 1px solid rgba(214,154,45,.5); color: #d69a2d; padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: 14px;">מתאים למשפחות</span>
+        </div>
+      </div>
+      <div style="position: relative;">
+        <div style="position: relative; height: 480px; border-radius: 14px; overflow: hidden; border: 3px solid #d69a2d; transform: rotate(-1.5deg); box-shadow: 0 20px 50px rgba(0,0,0,.4);">
+          <div class="fp-photo" style="height: 100%;"><span><span class="fp-icon">🍽️</span>תמונת אווירה מהמסעדה</span></div>
+        </div>
+        <div style="position: absolute; bottom: -22px; right: -14px; background: #c8402e; color: #f4ece0; font-family: 'Heebo'; font-weight: 900; padding: 16px 22px; border-radius: 12px; transform: rotate(3deg); box-shadow: 0 10px 24px rgba(0,0,0,.35); text-align: center; line-height: 1;">
+          <div style="font-size: 30px;">1971</div>
+          <div style="font-family: 'Oswald'; font-size: 11px; letter-spacing: 2px; margin-top: 4px;">EST.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width: 1200px; margin: 0 auto; padding: 84px 24px 40px;">
+    <div style="text-align: center; margin-bottom: 44px;">
+      <div style="font-family: 'Oswald'; letter-spacing: 3px; color: #c8402e; font-size: 14px; text-transform: uppercase;">House Favorites</div>
+      <h2 style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 5vw, 58px); margin: 12px 0 0;">מנות הדגל של הבית</h2>
+    </div>
+    <div class="fp-r2" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px;">
+      <div class="fp-card" style="background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(32,24,17,.1); border: 1px solid rgba(32,24,17,.06);">
+        <div style="position: relative; height: 220px; overflow: hidden;">
+          <div class="fp-photo" style="height: 100%;"><span><span class="fp-icon">🥗</span>מטבלים</span></div>
+        </div>
+        <div style="padding: 18px 18px 22px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+            <h3 style="font-family: 'Heebo'; font-weight: 800; font-size: 22px; margin: 0;">פלטת סלטים ומטבלים</h3>
+            <span style="font-family: 'Heebo'; font-weight: 900; color: #c8402e; font-size: 20px; white-space: nowrap;">₪32</span>
+          </div>
+          <p style="color: #6b5a48; font-size: 15px; line-height: 1.5; margin: 8px 0 0;">חומוס, טחינה, חצילים, כרוב וסלט טרי — עם לאפות חמות מהטאבון.</p>
+        </div>
+      </div>
+      <div class="fp-card" style="background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(32,24,17,.1); border: 1px solid rgba(32,24,17,.06);">
+        <div style="position: relative; height: 220px; overflow: hidden;">
+          <div class="fp-photo" style="height: 100%;"><span><span class="fp-icon">🍗</span>שיפודי פרגית</span></div>
+        </div>
+        <div style="padding: 18px 18px 22px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+            <h3 style="font-family: 'Heebo'; font-weight: 800; font-size: 22px; margin: 0;">שיפודי פרגית</h3>
+            <span style="font-family: 'Heebo'; font-weight: 900; color: #c8402e; font-size: 20px; white-space: nowrap;">₪25</span>
+          </div>
+          <p style="color: #6b5a48; font-size: 15px; line-height: 1.5; margin: 8px 0 0;">פרגית עסיסית על הגחלים עם בצל מטוגן. הכי מבוקש בגריל.</p>
+        </div>
+      </div>
+      <div class="fp-card" style="background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(32,24,17,.1); border: 1px solid rgba(32,24,17,.06);">
+        <div style="position: relative; height: 220px; overflow: hidden;">
+          <div class="fp-photo" style="height: 100%;"><span><span class="fp-icon">🥩</span>סטייק בקר</span></div>
+        </div>
+        <div style="padding: 18px 18px 22px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+            <h3 style="font-family: 'Heebo'; font-weight: 800; font-size: 22px; margin: 0;">סטייק בקר ורד הצלע</h3>
+            <span style="font-family: 'Heebo'; font-weight: 900; color: #c8402e; font-size: 20px; white-space: nowrap;">₪79</span>
+          </div>
+          <p style="color: #6b5a48; font-size: 15px; line-height: 1.5; margin: 8px 0 0;">נתח עסיסי נצלה לפי ההזמנה, מוגש עם בצל מוזהב ולאפות.</p>
+        </div>
+      </div>
+      <div class="fp-card" style="background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(32,24,17,.1); border: 1px solid rgba(32,24,17,.06);">
+        <div style="position: relative; height: 220px; overflow: hidden;">
+          <div class="fp-photo" style="height: 100%;"><span><span class="fp-icon">🌯</span>שיפוד בפיתה</span></div>
+        </div>
+        <div style="padding: 18px 18px 22px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+            <h3 style="font-family: 'Heebo'; font-weight: 800; font-size: 22px; margin: 0;">מעורב על האש</h3>
+            <span style="font-family: 'Heebo'; font-weight: 900; color: #c8402e; font-size: 20px; white-space: nowrap;">₪25</span>
+          </div>
+          <p style="color: #6b5a48; font-size: 15px; line-height: 1.5; margin: 8px 0 0;">שיפודים ישר מהאש אל הפיתה — בדיוק כמו שאסא יודע.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="menu" style="background: #f4ece0; padding: 70px 24px 90px;">
+    <div style="max-width: 1080px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 12px;">
+        <div style="font-family: 'Oswald'; letter-spacing: 3px; color: #c8402e; font-size: 14px; text-transform: uppercase;">The Menu · התפריט</div>
+        <h2 style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(38px, 6vw, 66px); margin: 12px 0 0;">התפריט המלא</h2>
+        <p style="color: #6b5a48; font-size: 16px; margin: 10px 0 0;">כל המחירים בשקלים. הבשר נצלה על הגחלים לפי ההזמנה.</p>
+      </div>
+
+      <div style="background: #201811; color: #f4ece0; border-radius: 18px; padding: 40px clamp(20px, 4vw, 54px); margin-top: 44px; border: 3px solid #d69a2d;">
+        <div class="fp-r1" style="display: grid; grid-template-columns: 1fr 1fr; gap: 44px 56px;">
+
+          <div>
+            <div style="display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #d69a2d; padding-bottom: 10px; margin-bottom: 8px;">
+              <h3 style="font-family: 'Heebo'; font-weight: 900; font-size: 26px; margin: 0; color: #d69a2d;">שיפודים</h3>
+              <span style="font-family: 'Oswald'; letter-spacing: 2px; font-size: 12px; color: #b79a6a; margin-inline-start: auto;">1 יח' / 2 יח'</span>
+            </div>
+            <div class="fp-menu-list"></div>
+            <ul class="menu-list" style="list-style:none; margin:0; padding:0;">
+              <li>פרגיות|25 / 50</li>
+              <li>קבב|25 / 50</li>
+              <li>כבד עוף|25 / 50</li>
+              <li>לבבות|25 / 50</li>
+              <li>שיפודי אנטריקוט|35 / 70</li>
+              <li>פילה בקר|35 / 70</li>
+              <li>כבש|35 / 70</li>
+              <li>כבד אווז|95</li>
+              <li>שיפוד אחד בפיתה|30</li>
+            </ul>
+          </div>
+
+          <div>
+            <div style="border-bottom: 2px solid #d69a2d; padding-bottom: 10px; margin-bottom: 8px;">
+              <h3 style="font-family: 'Heebo'; font-weight: 900; font-size: 26px; margin: 0; color: #d69a2d;">סטייקים ומנות בשר</h3>
+            </div>
+            <ul class="menu-list currency" style="list-style:none; margin:0; padding:0;">
+              <li>סטייק בקר ורד הצלע|79</li>
+              <li>סטייק לבן|69</li>
+              <li>פילה לבן|80</li>
+              <li>המבורגר ג'מבו מיוחד|40</li>
+              <li>סטייק אנטריקוט|95</li>
+              <li>סטייק פילה בקר|95</li>
+              <li>צלעות כבש|95</li>
+              <li>ספריבס|70</li>
+            </ul>
+          </div>
+
+          <div>
+            <div style="border-bottom: 2px solid #d69a2d; padding-bottom: 10px; margin-bottom: 8px;">
+              <h3 style="font-family: 'Heebo'; font-weight: 900; font-size: 26px; margin: 0; color: #d69a2d;">סלטים ומטבלים</h3>
+            </div>
+            <ul class="menu-list currency" style="list-style:none; margin:0; padding:0;">
+              <li>חומוס / טחינה|20</li>
+              <li>חומוס / פטריות|25</li>
+              <li>טחינה / פטריות|25</li>
+              <li>פטריות חמות|25</li>
+              <li>חצילים — 3 סוגים|20</li>
+              <li>טורקי|18</li>
+              <li>פלטת סלטים גדולה|32</li>
+              <li>ירקות / כרוב|15</li>
+              <li>סלטים בפיתה|15</li>
+            </ul>
+          </div>
+
+          <div>
+            <div style="border-bottom: 2px solid #d69a2d; padding-bottom: 10px; margin-bottom: 8px;">
+              <h3 style="font-family: 'Heebo'; font-weight: 900; font-size: 26px; margin: 0; color: #d69a2d;">שתייה, קינוחים ותוספות</h3>
+            </div>
+            <ul class="menu-list currency" style="list-style:none; margin:0; padding:0;">
+              <li>קולה / דיאט / זירו|10</li>
+              <li>מיץ פריגת|10</li>
+              <li>בירה מאלטי|10</li>
+              <li>קרלסברג / טובורג|16</li>
+              <li>מים / סודה|8</li>
+              <li>קרם באווריה|16</li>
+              <li>מוס שוקולד|16</li>
+              <li>תוספת קובה|10</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+      <p style="text-align: center; color: #6b5a48; font-size: 14px; margin-top: 20px;">* ייתכנו שינויים בתפריט ובמחירים. לפרטים ובירורים: 03-9600888.</p>
+    </div>
+  </section>
+
+  <section id="gallery" style="padding: 84px 24px;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 40px;">
+        <div style="font-family: 'Oswald'; letter-spacing: 3px; color: #c8402e; font-size: 14px; text-transform: uppercase;">Gallery · גלריה</div>
+        <h2 style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 5vw, 58px); margin: 12px 0 0;">מהגחלים אליכם</h2>
+        <p style="color: #6b5a48; font-size: 16px; margin: 10px 0 0;">רגעים מהמסעדה, מהגריל ומהצלחת.</p>
+      </div>
+      <div class="fp-r2" style="display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 200px; gap: 14px;">
+        <div style="grid-column: span 2; grid-row: span 2; border-radius: 12px; overflow: hidden;"><div class="fp-photo" style="height:100%"><span><span class="fp-icon">🍽️</span>מנת בשר על הצלחת</span></div></div>
+        <div style="border-radius: 12px; overflow: hidden;"><div class="fp-photo" style="height:100%"><span><span class="fp-icon">🍗</span>שיפודים על הגריל</span></div></div>
+        <div style="border-radius: 12px; overflow: hidden;"><div class="fp-photo" style="height:100%"><span><span class="fp-icon">🏠</span>אווירה</span></div></div>
+        <div style="grid-column: span 2; border-radius: 12px; overflow: hidden;"><div class="fp-photo" style="height:100%"><span><span class="fp-icon">🚪</span>חזית המסעדה</span></div></div>
+        <div style="border-radius: 12px; overflow: hidden;"><div class="fp-photo" style="height:100%"><span><span class="fp-icon">🍢</span>שיפודי פרגית</span></div></div>
+        <div style="border-radius: 12px; overflow: hidden;"><div class="fp-photo" style="height:100%"><span><span class="fp-icon">🥩</span>סטייק</span></div></div>
+        <div style="border-radius: 12px; overflow: hidden;"><div class="fp-photo" style="height:100%"><span><span class="fp-icon">🏠</span>אווירה</span></div></div>
+        <div style="border-radius: 12px; overflow: hidden;"><div class="fp-photo" style="height:100%"><span><span class="fp-icon">🥗</span>מטבלים</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #c8402e; color: #f4ece0; padding: 80px 24px;">
+    <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+      <div style="font-family: 'Oswald'; letter-spacing: 3px; font-size: 14px; text-transform: uppercase; opacity: .85;">Reviews · חוות דעת</div>
+      <h2 style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 5vw, 58px); margin: 12px 0 8px;">אורחים מדברים</h2>
+      <div style="font-family: 'Heebo'; font-weight: 900; font-size: 42px; color: #d69a2d; letter-spacing: 4px;">★★★★★</div>
+      <div class="fp-r1" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 40px; text-align: right;">
+        <div style="background: rgba(255,255,255,.1); border: 1px solid rgba(244,236,224,.25); border-radius: 14px; padding: 26px;">
+          <div style="color: #d69a2d; font-size: 18px; letter-spacing: 2px;">★★★★★</div>
+          <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">"מקום נפלא לאכול בו בהנאה. בעלי הבית מקסימים, אדיבים ומסבירי פנים. האוכל טרי וטעים ואני מחכה להגיע מדי שבוע."</p>
+          <div style="font-weight: 700; margin-top: 16px; font-size: 15px;">— זיוה, ביקורת אורחים</div>
+        </div>
+        <div style="background: rgba(255,255,255,.1); border: 1px solid rgba(244,236,224,.25); border-radius: 14px; padding: 26px;">
+          <div style="color: #d69a2d; font-size: 18px; letter-spacing: 2px;">★★★★★</div>
+          <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">"סטייק חלום, תיבול שמשאיר טעם של עוד, וחומוס פטריות מעולה. סה"כ חוויה טעימה מאוד."</p>
+          <div style="font-weight: 700; margin-top: 16px; font-size: 15px;">— אורח קבוע</div>
+        </div>
+        <div style="background: rgba(255,255,255,.1); border: 1px solid rgba(244,236,224,.25); border-radius: 14px; padding: 26px;">
+          <div style="color: #d69a2d; font-size: 18px; letter-spacing: 2px;">★★★★★</div>
+          <p style="font-size: 17px; line-height: 1.6; margin: 12px 0 0;">"מסעדת בשרים מעולה עם ותק של למעלה מ־50 שנה. בשרים עסיסיים, סלטים טריים בשפע והמון משפחתיות."</p>
+          <div style="font-weight: 700; margin-top: 16px; font-size: 15px;">— פונדק אסא, פייסבוק</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="catering" style="padding: 84px 24px; background: #201811; color: #f4ece0;">
+    <div class="fp-r1" style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr .9fr; gap: 50px; align-items: center;">
+      <div>
+        <div style="font-family: 'Oswald'; letter-spacing: 3px; color: #d69a2d; font-size: 14px; text-transform: uppercase;">Catering & Events</div>
+        <h2 style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 5vw, 56px); margin: 14px 0 0; line-height: 1.05;">אירוע? חוגגים אצל אסא.</h2>
+        <p style="font-size: 18px; line-height: 1.7; color: #eaded0; margin: 22px 0 0;">מנגל לחברה, אירוע משפחתי או הזמנה גדולה לקחת — אנחנו מכינים לכם מגשי בשרים, שיפודים וסלטים בכמויות, באותה איכות של המסעדה. ספרו לנו כמה אתם ומתי, ואנחנו נדאג לשאר.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 30px;">
+          <a href="tel:0539600888" style="background: #d69a2d; color: #201811; font-family: 'Heebo'; font-weight: 800; font-size: 17px; padding: 14px 28px; border-radius: 999px;">☎ לתיאום קייטרינג</a>
+          <a href="https://wa.me/972539600888" target="_blank" style="border: 2px solid rgba(244,236,224,.5); color: #f4ece0; font-family: 'Heebo'; font-weight: 800; font-size: 17px; padding: 12px 26px; border-radius: 999px;">שלחו הודעת וואטסאפ</a>
+        </div>
+      </div>
+      <div style="height: 380px; border-radius: 14px; overflow: hidden; border: 3px solid #d69a2d; transform: rotate(1.5deg);">
+        <div class="fp-photo" style="height: 100%;"><span><span class="fp-icon">🍖</span>מגש בשרים / קייטרינג</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="visit" style="padding: 84px 24px;">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 44px;">
+        <div style="font-family: 'Oswald'; letter-spacing: 3px; color: #c8402e; font-size: 14px; text-transform: uppercase;">Find Us · הגעה</div>
+        <h2 style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(34px, 5vw, 58px); margin: 12px 0 0;">איפה ומתי</h2>
+      </div>
+      <div class="fp-r1" style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px; align-items: stretch;">
+        <div style="background: #201811; color: #f4ece0; border-radius: 16px; padding: 34px; display: flex; flex-direction: column; gap: 26px;">
+          <div>
+            <div style="font-family: 'Oswald'; letter-spacing: 2px; color: #d69a2d; font-size: 12px; text-transform: uppercase;">Address</div>
+            <div style="font-family: 'Heebo'; font-weight: 800; font-size: 22px; margin-top: 6px;">צומת בית דגן</div>
+            <div style="color: #cbbcac; font-size: 16px; margin-top: 2px;">תחנת הדלק, כביש 44 · חניה חופשית בשפע</div>
+          </div>
+          <div>
+            <div style="font-family: 'Oswald'; letter-spacing: 2px; color: #d69a2d; font-size: 12px; text-transform: uppercase;">Hours · שעות פתיחה</div>
+            <div style="font-family: 'Heebo'; font-weight: 800; font-size: 22px; margin-top: 6px;">כל ימות השבוע</div>
+            <div style="color: #cbbcac; font-size: 16px; margin-top: 2px;">א׳–שבת · 10:00 – 01:00</div>
+          </div>
+          <div>
+            <div style="font-family: 'Oswald'; letter-spacing: 2px; color: #d69a2d; font-size: 12px; text-transform: uppercase;">Phone · טלפון</div>
+            <div style="font-family: 'Heebo'; font-weight: 800; font-size: 22px; margin-top: 6px;">03-9600888</div>
+            <div style="color: #cbbcac; font-size: 16px; margin-top: 2px;">053-5300130</div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: auto;">
+            <a href="https://waze.com/ul?q=פונדק אסא בית דגן" target="_blank" style="flex: 1; text-align: center; background: #d69a2d; color: #201811; font-weight: 800; padding: 13px; border-radius: 999px; min-width: 130px;">Waze</a>
+            <a href="https://www.google.com/maps/search/פונדק+אסא+בית+דגן" target="_blank" style="flex: 1; text-align: center; background: #c8402e; color: #f4ece0; font-weight: 800; padding: 13px; border-radius: 999px; min-width: 130px;">Google Maps</a>
+          </div>
+        </div>
+        <div style="border-radius: 16px; overflow: hidden; min-height: 420px; border: 3px solid #201811;">
+          <iframe title="מפה - פונדק אסא בית דגן" src="https://www.google.com/maps?q=פונדק+אסא+בית+דגן&output=embed" style="width: 100%; height: 100%; min-height: 420px; border: 0;" loading="lazy"></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="background: #201811; color: #f4ece0; padding: 60px 24px 34px; border-top: 3px solid #d69a2d;">
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 30px; justify-content: space-between; align-items: flex-start;">
+      <div style="max-width: 340px;">
+        <img src="assets/logo-cream.png" alt="פונדק אסא סטקייה — צומת בית דגן" style="height: 60px;">
+        <p style="color: #cbbcac; font-size: 15px; line-height: 1.6; margin: 16px 0 0;">מסעדת הבשרים הוותיקה בצומת בית דגן. בשר על האש, כמו פעם — מאז 1971.</p>
+      </div>
+      <div>
+        <div style="font-family: 'Oswald'; letter-spacing: 2px; color: #d69a2d; font-size: 12px; text-transform: uppercase; margin-bottom: 14px;">ניווט</div>
+        <div style="display: flex; flex-direction: column; gap: 9px;">
+          <a href="#story" style="color: #f4ece0; font-size: 15px;">הסיפור</a>
+          <a href="#menu" style="color: #f4ece0; font-size: 15px;">תפריט</a>
+          <a href="#gallery" style="color: #f4ece0; font-size: 15px;">גלריה</a>
+          <a href="#catering" style="color: #f4ece0; font-size: 15px;">אירועים</a>
+          <a href="#visit" style="color: #f4ece0; font-size: 15px;">הגעה</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-family: 'Oswald'; letter-spacing: 2px; color: #d69a2d; font-size: 12px; text-transform: uppercase; margin-bottom: 14px;">צרו קשר</div>
+        <div style="display: flex; flex-direction: column; gap: 9px; color: #cbbcac; font-size: 15px;">
+          <a href="tel:0539600888" style="color: #f4ece0;">☎ 03-9600888</a>
+          <a href="https://wa.me/972539600888" target="_blank" style="color: #f4ece0;">וואטסאפ</a>
+          <span>צומת בית דגן, כביש 44</span>
+          <span>א׳–שבת · 10:00–01:00</span>
+        </div>
+      </div>
+    </div>
+    <div style="max-width: 1200px; margin: 40px auto 0; padding-top: 20px; border-top: 1px solid rgba(244,236,224,.14); color: #8f7f6d; font-size: 13px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; align-items: center;">
+      <span>© פונדק אסא · כל הזכויות שמורות</span>
+      <div style="display: flex; gap: 18px; flex-wrap: wrap;">
+        <button id="openPrivacy" style="background: none; border: none; color: #cbbcac; font-size: 13px; cursor: pointer; padding: 0; font-family: inherit;">מדיניות פרטיות</button>
+        <button id="openAccess" style="background: none; border: none; color: #cbbcac; font-size: 13px; cursor: pointer; padding: 0; font-family: inherit;">הצהרת נגישות</button>
+      </div>
+      <span style="font-family: 'Oswald'; letter-spacing: 2px;">BEIT DAGAN · SINCE 1971</span>
+    </div>
+  </footer>
+
+  <button id="a11yToggle" data-btn aria-label="פתיחת תפריט נגישות" title="נגישות" style="position: fixed; bottom: 20px; inset-inline-start: 20px; z-index: 80; width: 58px; height: 58px; border-radius: 50%; background: #1a6b7a; color: #fff; border: 3px solid #f4ece0; font-size: 28px; cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.32); display: flex; align-items: center; justify-content: center;">♿</button>
+
+  <div id="a11yPanel" dir="rtl" role="dialog" aria-label="תפריט נגישות" hidden style="position: fixed; bottom: 90px; inset-inline-start: 20px; z-index: 81; width: 312px; background: #fff; border-radius: 16px; box-shadow: 0 24px 60px rgba(0,0,0,.4); border: 2px solid #1a6b7a; padding: 18px; font-family: 'Assistant', sans-serif;">
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 12px;">
+      <span style="font-family: 'Heebo'; font-weight: 900; font-size: 18px; color: #201811;">תפריט נגישות</span>
+      <button id="a11yClose" aria-label="סגירה" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #777; line-height: 1;">×</button>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <button id="a11yFontUp" style="padding: 12px 6px; border: 1.5px solid #d9d2c6; background: #f4ece0; border-radius: 10px; font-weight: 700; font-size: 13px; color: #201811; cursor: pointer; font-family: inherit;">הגדלת טקסט ＋</button>
+      <button id="a11yFontDown" style="padding: 12px 6px; border: 1.5px solid #d9d2c6; background: #f4ece0; border-radius: 10px; font-weight: 700; font-size: 13px; color: #201811; cursor: pointer; font-family: inherit;">הקטנת טקסט －</button>
+      <button id="a11yContrast" style="padding: 12px 6px; border: 1.5px solid #d9d2c6; background: #f4ece0; border-radius: 10px; font-weight: 700; font-size: 13px; color: #201811; cursor: pointer; font-family: inherit;">ניגודיות גבוהה</button>
+      <button id="a11yGray" style="padding: 12px 6px; border: 1.5px solid #d9d2c6; background: #f4ece0; border-radius: 10px; font-weight: 700; font-size: 13px; color: #201811; cursor: pointer; font-family: inherit;">גווני אפור</button>
+      <button id="a11yLinks" style="padding: 12px 6px; border: 1.5px solid #d9d2c6; background: #f4ece0; border-radius: 10px; font-weight: 700; font-size: 13px; color: #201811; cursor: pointer; font-family: inherit;">הדגשת קישורים</button>
+      <button id="a11yReadable" style="padding: 12px 6px; border: 1.5px solid #d9d2c6; background: #f4ece0; border-radius: 10px; font-weight: 700; font-size: 13px; color: #201811; cursor: pointer; font-family: inherit;">גופן קריא</button>
+    </div>
+    <button id="a11yReset" style="width: 100%; margin-top: 10px; padding: 11px; border: none; background: #c8402e; color: #fff; border-radius: 10px; font-weight: 800; font-size: 14px; cursor: pointer; font-family: inherit;">איפוס הגדרות נגישות</button>
+    <button id="a11yOpenAccessStatement" style="width: 100%; margin-top: 8px; background: none; border: none; color: #1a6b7a; text-decoration: underline; cursor: pointer; font-size: 13px; font-family: inherit;">להצהרת הנגישות המלאה</button>
+  </div>
+
+  <div id="modalOverlay" hidden style="position: fixed; inset: 0; z-index: 90; background: rgba(20,14,9,.72); display: flex; align-items: center; justify-content: center; padding: 24px;">
+    <div id="modalBox" dir="rtl" style="background: #fff; max-width: 720px; width: 100%; max-height: 85vh; overflow: auto; border-radius: 18px; padding: clamp(24px, 4vw, 40px); border-top: 6px solid #c8402e; font-family: 'Assistant', sans-serif;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+        <h2 id="modalTitle" style="font-family: 'Heebo'; font-weight: 900; font-size: clamp(26px, 4vw, 34px); margin: 0; color: #201811;"></h2>
+        <button id="modalClose" aria-label="סגירה" style="background: none; border: none; font-size: 30px; cursor: pointer; color: #999; line-height: 1;">×</button>
+      </div>
+      <div id="modalBodyPrivacy" hidden style="margin-top: 18px; color: #3a2e22; font-size: 15.5px; line-height: 1.75;">
+        <p style="margin: 0 0 14px;">אתר זה משמש להצגת מסעדת <strong>פונדק אסא</strong> ("המסעדה"), פרטי ההתקשרות, התפריט והמיקום. אנו מכבדים את פרטיות המבקרים באתר ופועלים בהתאם להוראות חוק הגנת הפרטיות, התשמ"א־1981.</p>
+        <p style="margin: 0 0 8px;"><strong>איזה מידע נאסף?</strong></p>
+        <p style="margin: 0 0 14px;">האתר אינו כולל טפסים או מערכת הזמנות מקוונת ואינו אוסף מידע מזהה באופן יזום. פנייה אלינו נעשית ביוזמתכם בלבד — בטלפון או בהודעת וואטסאפ — והפרטים שתמסרו ישמשו אך ורק למענה לפנייתכם.</p>
+        <p style="margin: 0 0 8px;"><strong>שירותי צד שלישי</strong></p>
+        <p style="margin: 0 0 14px;">האתר עושה שימוש בשירותים חיצוניים כגון מפות Google, Waze ו־WhatsApp לצורך ניווט ויצירת קשר. שימושכם בשירותים אלו כפוף למדיניות הפרטיות של אותם ספקים.</p>
+        <p style="margin: 0 0 8px;"><strong>עוגיות (Cookies)</strong></p>
+        <p style="margin: 0 0 14px;">רכיבים מוטמעים (כגון מפת Google) עשויים להשתמש בעוגיות. ניתן לחסום עוגיות דרך הגדרות הדפדפן.</p>
+        <p style="margin: 0 0 8px;"><strong>יצירת קשר בנושא פרטיות</strong></p>
+        <p style="margin: 0;">בכל שאלה בנוגע למדיניות זו ניתן לפנות אלינו בטלפון 03-9600888. מדיניות זו עשויה להתעדכן מעת לעת.</p>
+      </div>
+      <div id="modalBodyAccess" hidden style="margin-top: 18px; color: #3a2e22; font-size: 15.5px; line-height: 1.75;">
+        <p style="margin: 0 0 14px;">מסעדת <strong>פונדק אסא</strong> רואה חשיבות רבה במתן שירות שוויוני לכלל הלקוחות, ופועלת להנגשת אתר האינטרנט שלה בהתאם לתקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), התשע"ג־2013, ולתקן הישראלי 5568 המבוסס על הנחיות <strong>WCAG 2.0</strong> ברמה AA.</p>
+        <p style="margin: 0 0 8px;"><strong>אמצעי הנגישות באתר</strong></p>
+        <p style="margin: 0 0 14px;">באתר מוטמע תפריט נגישות (הכפתור בצד המסך) המאפשר: הגדלה והקטנה של גודל הטקסט, מצב ניגודיות גבוהה, מצב גווני אפור, הדגשת קישורים, מעבר לגופן קריא ואיפוס ההגדרות. האתר ניתן לניווט באמצעות מקלדת ונבנה במבנה סמנטי התומך בקוראי מסך.</p>
+        <p style="margin: 0 0 8px;"><strong>הנגשה פרונטלית במסעדה</strong></p>
+        <p style="margin: 0 0 14px;">המסעדה כוללת חניית נכים נגישה וגישה לבעלי מוגבלות. נשמח לסייע בכל צורך במקום.</p>
+        <p style="margin: 0 0 8px;"><strong>מגבלות ידועות</strong></p>
+        <p style="margin: 0 0 14px;">ייתכן ובחלקים מסוימים באתר, לרבות רכיבים של צד שלישי (כגון מפות מוטמעות), טרם הושלמה ההנגשה המלאה. אנו פועלים לשיפור מתמיד.</p>
+        <p style="margin: 0 0 8px;"><strong>פנייה בנושא נגישות</strong></p>
+        <p style="margin: 0;">נתקלתם בבעיית נגישות? נשמח לקבל פנייה ולטפל בהקדם — רכז הנגישות זמין בטלפון 03-9600888 או בהודעת וואטסאפ. הצהרה זו עודכנה בחודש יולי 2026.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var menuLists = document.querySelectorAll('.menu-list');
+  menuLists.forEach(function (list) {
+    var currency = list.classList.contains('currency');
+    list.querySelectorAll('li').forEach(function (li) {
+      var parts = li.textContent.split('|');
+      var name = parts[0], price = parts[1];
+      li.textContent = '';
+      li.style.cssText = 'display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px dashed rgba(244,236,224,.14);';
+      var nameSpan = document.createElement('span');
+      nameSpan.style.cssText = 'font-weight:700;font-size:17px;';
+      nameSpan.textContent = name;
+      var fill = document.createElement('span');
+      fill.style.cssText = 'flex:1;border-bottom:1px dotted rgba(244,236,224,.25);transform:translateY(-4px);';
+      var priceSpan = document.createElement('span');
+      priceSpan.style.cssText = "font-family:'Heebo';font-weight:800;color:#f4ece0;font-size:16px;white-space:nowrap;";
+      priceSpan.textContent = currency ? ('₪' + price) : price;
+      li.appendChild(nameSpan);
+      li.appendChild(fill);
+      li.appendChild(priceSpan);
+    });
+  });
+
+  var state = { font: 0, contrast: false, gray: false, links: false, readable: false };
+
+  function apply() {
+    var html = document.documentElement;
+    var f = [];
+    if (state.contrast) f.push('contrast(1.35)');
+    if (state.gray) f.push('grayscale(1)');
+    html.style.filter = f.join(' ');
+    document.body.style.zoom = String(1 + state.font * 0.1);
+    html.classList.toggle('a11y-links', state.links);
+    html.classList.toggle('a11y-readable', state.readable);
+  }
+
+  var a11yPanel = document.getElementById('a11yPanel');
+  document.getElementById('a11yToggle').addEventListener('click', function () {
+    a11yPanel.hidden = !a11yPanel.hidden;
+  });
+  document.getElementById('a11yClose').addEventListener('click', function () { a11yPanel.hidden = true; });
+  document.getElementById('a11yFontUp').addEventListener('click', function () { state.font = Math.min(4, state.font + 1); apply(); });
+  document.getElementById('a11yFontDown').addEventListener('click', function () { state.font = Math.max(-2, state.font - 1); apply(); });
+  document.getElementById('a11yContrast').addEventListener('click', function () { state.contrast = !state.contrast; apply(); });
+  document.getElementById('a11yGray').addEventListener('click', function () { state.gray = !state.gray; apply(); });
+  document.getElementById('a11yLinks').addEventListener('click', function () { state.links = !state.links; apply(); });
+  document.getElementById('a11yReadable').addEventListener('click', function () { state.readable = !state.readable; apply(); });
+  document.getElementById('a11yReset').addEventListener('click', function () {
+    state = { font: 0, contrast: false, gray: false, links: false, readable: false };
+    apply();
+  });
+
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalTitle = document.getElementById('modalTitle');
+  var modalPrivacy = document.getElementById('modalBodyPrivacy');
+  var modalAccess = document.getElementById('modalBodyAccess');
+
+  function openModal(kind) {
+    a11yPanel.hidden = true;
+    modalOverlay.hidden = false;
+    if (kind === 'privacy') {
+      modalTitle.textContent = 'מדיניות פרטיות';
+      modalPrivacy.hidden = false;
+      modalAccess.hidden = true;
+    } else {
+      modalTitle.textContent = 'הצהרת נגישות';
+      modalPrivacy.hidden = true;
+      modalAccess.hidden = false;
+    }
+  }
+  function closeModal() { modalOverlay.hidden = true; }
+
+  document.getElementById('openPrivacy').addEventListener('click', function () { openModal('privacy'); });
+  document.getElementById('openAccess').addEventListener('click', function () { openModal('access'); });
+  document.getElementById('a11yOpenAccessStatement').addEventListener('click', function () { openModal('access'); });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  modalOverlay.addEventListener('click', function (e) { if (e.target === modalOverlay) closeModal(); });
+})();
+</script>
+</body>
+</html>
